@@ -43,3 +43,37 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Used by dotenv library to load environment variables.
+.env
+.env.*
+.envfile
+.android.config
+.ios.config
+
+.flutter-plugins-dependencies
+.flutter-plugins
+
+pubspec.lock
+
+# Flutter generated files
+*.g.dart
+
+# Large media files
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+
+# Applications
+*.app
+*.exe
+*.war
+
+# Ignore commit
+NOTE_RULES.md
+
+# FVM Version Cache
+.fvm/
