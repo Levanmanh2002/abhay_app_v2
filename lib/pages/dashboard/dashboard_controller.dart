@@ -1,10 +1,18 @@
+import 'package:abhay_app_v2/pages/home/home_page.dart';
+import 'package:abhay_app_v2/pages/profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
   late PageController pageController;
   RxInt currentPage = 0.obs;
-  List<Widget> pages = [];
+
+  List<Widget> pages = [
+    HomePage(),
+    const SizedBox(),
+    const SizedBox(),
+    ProfilePage(),
+  ];
 
   @override
   void onInit() {

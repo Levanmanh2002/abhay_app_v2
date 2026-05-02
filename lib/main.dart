@@ -92,7 +92,6 @@ class _MyAppState extends State<MyApp> {
           ),
           scaffoldBackgroundColor: appTheme.whiteColor,
         ),
-        // initialRoute: token.isNotEmpty ? Routes.DASHBOARD : Routes.SIGN_IN,
         initialRoute: Routes.SPLASH,
         getPages: AppPages.pages,
         builder: EasyLoading.init(),

@@ -69,4 +69,8 @@ const Map<String, String> vi = {
   'change_password_title': 'Tạo mật khẩu\nmới 🔒',
   'change_password_subtitle': 'Mật khẩu mới của bạn phải có ít nhất 6 ký tự.',
   'change_password_button': 'Lưu mật khẩu',
+  'trip_tracking': 'Theo dõi chuyến đi',
+  'recipients': 'Người nhận',
+  'alert_received': 'Cảnh báo đã nhận',
+  'profile': 'Hồ sơ',
 };

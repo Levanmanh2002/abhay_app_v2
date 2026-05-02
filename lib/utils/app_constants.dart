@@ -1,7 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
-  static const String appName = 'Abhay App';
+  static const String appName = 'Chaitany Abhay';
 
   static const int minNameLength = 2;
   static const int minAddressLength = 12;

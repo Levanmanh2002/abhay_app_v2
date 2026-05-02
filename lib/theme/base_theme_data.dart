@@ -29,6 +29,7 @@ abstract class BaseThemeData {
 
   Color bgGreenColor = const Color(0xFFE9FFEC);
 
+  Color oldSliverColor = const Color(0xFF787878);
   Color allSidesColor = const Color(0xFFF1F1F1);
 
   Color red55Color = const Color(0xFFFF5555);

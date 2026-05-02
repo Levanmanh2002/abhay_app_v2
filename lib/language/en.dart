@@ -68,4 +68,8 @@ const Map<String, String> en = {
   'change_password_title': 'Create New\nPassword 🔒',
   'change_password_subtitle': 'Your new password must be at least 6 characters.',
   'change_password_button': 'Save Password',
+  'trip_tracking': 'Trip tracking',
+  'recipients': 'Recipients',
+  'alert_received': 'Alert received',
+  'profile': 'Profile',
 };
