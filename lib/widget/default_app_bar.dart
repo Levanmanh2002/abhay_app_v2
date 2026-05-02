@@ -2,6 +2,7 @@ import 'package:abhay_app_v2/gen/assets.gen.dart';
 import 'package:abhay_app_v2/main.dart';
 import 'package:abhay_app_v2/theme/style/style_theme.dart';
 import 'package:abhay_app_v2/widget/image_asset_custom.dart';
+import 'package:abhay_app_v2/widget/reponsive/extension.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,6 +19,7 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? widgetText;
   final Color? colorTitle;
   final Color? colorIcon;
+  final bool isBackIconCustom;
 
   const DefaultAppBar({
     super.key,
@@ -33,6 +35,7 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.widgetText,
     this.colorTitle,
     this.colorIcon,
+    this.isBackIconCustom = false,
   });
 
   @override
@@ -47,12 +50,47 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
       centerTitle: centerTitle,
       leading: backButton
-          ? IconButton(
-              onPressed: () => onBackPressed != null ? onBackPressed!() : Get.back(),
-              icon: backIcon ?? ImageAssetCustom(imagePath: Assets.icons.arrowLeft.path, color: colorIcon),
-            )
+          ? isBackIconCustom
+              ? Padding(
+                  padding: padding(left: 8),
+                  child: Center(
+                    child: InkWell(
+                      onTap: () => Get.back(),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 40.w,
+                        height: 40.w,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: appTheme.whiteColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: appTheme.appColor.withAlpha(15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 16.w,
+                          color: appTheme.blackColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () => onBackPressed != null ? onBackPressed!() : Get.back(),
+                  icon: backIcon ?? ImageAssetCustom(imagePath: Assets.icons.arrowLeft.path, color: colorIcon),
+                )
           : const SizedBox(),
-      leadingWidth: backButton ? null : 0,
+      leadingWidth: backButton
+          ? isBackIconCustom
+              ? 72.w
+              : null
+          : 0,
       elevation: 0,
       actions: actions,
       titleSpacing: centerTitle ? null : 0,

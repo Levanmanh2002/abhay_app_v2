@@ -1,3 +1,4 @@
+import 'package:abhay_app_v2/main.dart';
 import 'package:flutter/material.dart';
 
 class AppBorderShadow {
@@ -9,12 +10,11 @@ class AppBorderShadow {
     ),
   ];
 
-  static List<BoxShadow>? boxShadowDropdown = [
-    const BoxShadow(
-      color: Color(0x1A000000),
-      blurRadius: 100,
-      spreadRadius: 0,
-      offset: Offset(0, 0),
+  static List<BoxShadow>? boxShadowAuth = [
+    BoxShadow(
+      color: appTheme.appColor.withAlpha(15),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
     ),
   ];
 }

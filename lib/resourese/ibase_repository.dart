@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:abhay_app_v2/resourese/api_error_handler.dart';
 import 'package:abhay_app_v2/resourese/service/localization_service.dart';
 import 'package:abhay_app_v2/routes/pages.dart';
 import 'package:abhay_app_v2/utils/app_constants.dart';
@@ -164,8 +165,10 @@ class IBaseRepository {
       statusText: response.reasonPhrase,
     );
 
-    if (response0.statusCode == 401) {
-      await _logout();
+    if (response0.statusCode == 401 && Get.currentRoute != Routes.SIGN_IN) {
+      await ApiErrorManager.handle401IfNeeded(() async {
+        await _logout();
+      });
     }
 
     if (response0.isOk) {
@@ -180,7 +183,7 @@ class IBaseRepository {
   }
 
   Future<void> _logout() async {
-    // DialogUtils.showErrorDialog('Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!');
+    if (Get.currentRoute == Routes.SIGN_IN) return;
 
     String? savedLanguage = LocalStorage.getString(SharedKey.language);
 

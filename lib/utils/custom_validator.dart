@@ -7,7 +7,8 @@ class CustomValidator {
       r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
 
   static final RegExp passwordRegex = RegExp(
-      r'^(?!.*[ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯưĂâđêôơư])(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[#?!@$%^&*-])\S{8,}$');
+    r'^(?!.*[ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯưĂâđêôơư])(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[#?!@$%^&*-])\S{8,}$',
+  );
 
   static String validatePhone(String phone, {bool isRequired = true}) {
     if (isRequired && phone.trim().isEmpty) {
@@ -19,13 +20,13 @@ class CustomValidator {
     return '';
   }
 
-  static String validateName(String fullName, {bool isRequired = true}) {
+  static String validateFullName(String fullName, {bool isRequired = true}) {
     if (isRequired && fullName.trim().isEmpty) {
-      return 'field_is_required'.trParams({'field': 'name'.tr});
+      return 'field_is_required'.trParams({'field': 'full_name'.tr});
     }
     if (fullName.isNotEmpty && fullName.trim().length < AppConstants.minNameLength ||
         fullName.trim().length > AppConstants.maxNameLength) {
-      return 'enter_full_field'.trParams({'field': 'name'.tr.toLowerCase()});
+      return 'enter_full_field'.trParams({'field': 'full_name'.tr.toLowerCase()});
     }
     return '';
   }
@@ -62,9 +63,9 @@ class CustomValidator {
 
   static String validatePassword(String password) {
     if (password.isEmpty) {
-      return 'validate_password'.tr;
-    } else if (!passwordRegex.hasMatch(password)) {
-      return 'validate_password'.tr;
+      return 'field_is_required'.trParams({'field': 'password'.tr});
+    } else if (password.length < 6) {
+      return 'common_pwd_too_short'.tr;
     }
     return '';
   }

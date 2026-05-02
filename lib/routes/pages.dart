@@ -1,7 +1,15 @@
+import 'package:abhay_app_v2/pages/change_password/change_password_binding.dart';
+import 'package:abhay_app_v2/pages/change_password/change_password_page.dart';
 import 'package:abhay_app_v2/pages/dashboard/dashboard_binding.dart';
 import 'package:abhay_app_v2/pages/dashboard/dashboard_page.dart';
+import 'package:abhay_app_v2/pages/forgot_password/forgot_password_binding.dart';
+import 'package:abhay_app_v2/pages/forgot_password/forgot_password_page.dart';
+import 'package:abhay_app_v2/pages/otp/otp_binding.dart';
+import 'package:abhay_app_v2/pages/otp/otp_page.dart';
 import 'package:abhay_app_v2/pages/sign_in/sign_in_binding.dart';
 import 'package:abhay_app_v2/pages/sign_in/sign_in_page.dart';
+import 'package:abhay_app_v2/pages/sign_up/sign_up_binding.dart';
+import 'package:abhay_app_v2/pages/sign_up/sign_up_page.dart';
 import 'package:abhay_app_v2/pages/splash/splash_binding.dart';
 import 'package:abhay_app_v2/pages/splash/splash_page.dart';
 import 'package:get/get.dart';
@@ -19,6 +27,26 @@ abstract class AppPages {
       name: Routes.SIGN_IN,
       page: () => SignInPage(),
       binding: SignInBinding(),
+    ),
+    GetPage(
+      name: Routes.SIGN_UP,
+      page: () => SignUpPage(),
+      binding: SignUpBinding(),
+    ),
+    GetPage(
+      name: Routes.FORGOT_PASSWORD,
+      page: () => ForgotPasswordPage(),
+      binding: ForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: Routes.OTP,
+      page: () => OtpPage(),
+      binding: OtpBinding(),
+    ),
+    GetPage(
+      name: Routes.CHANGE_PASSWORD,
+      page: () => ChangePasswordPage(),
+      binding: ChangePasswordBinding(),
     ),
     GetPage(
       name: Routes.DASHBOARD,

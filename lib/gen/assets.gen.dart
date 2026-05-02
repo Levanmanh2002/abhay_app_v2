@@ -17,12 +17,19 @@ import 'package:vector_graphics/vector_graphics.dart' as _vg;
 class $AssetsIconsGen {
   const $AssetsIconsGen();
 
+  /// File path: assets/icons/arrow_down.svg
+  SvgGenImage get arrowDown => const SvgGenImage('assets/icons/arrow_down.svg');
+
   /// File path: assets/icons/arrow_left.svg
   SvgGenImage get arrowLeft => const SvgGenImage('assets/icons/arrow_left.svg');
 
   /// File path: assets/icons/arrow_right.svg
   SvgGenImage get arrowRight =>
       const SvgGenImage('assets/icons/arrow_right.svg');
+
+  /// File path: assets/icons/calendar_gray.svg
+  SvgGenImage get calendarGray =>
+      const SvgGenImage('assets/icons/calendar_gray.svg');
 
   /// File path: assets/icons/checkbox.svg
   SvgGenImage get checkbox => const SvgGenImage('assets/icons/checkbox.svg');
@@ -61,8 +68,10 @@ class $AssetsIconsGen {
 
   /// List of all assets
   List<SvgGenImage> get values => [
+        arrowDown,
         arrowLeft,
         arrowRight,
+        calendarGray,
         checkbox,
         closeCircle,
         closeCircleGray,
@@ -79,6 +88,9 @@ class $AssetsIconsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  /// Directory path: assets/images/logo_app
+  $AssetsImagesLogoAppGen get logoApp => const $AssetsImagesLogoAppGen();
+
   /// File path: assets/images/no_url.png
   AssetGenImage get noUrl => const AssetGenImage('assets/images/no_url.png');
 
@@ -88,6 +100,17 @@ class $AssetsImagesGen {
 
   /// List of all assets
   List<AssetGenImage> get values => [noUrl, placeholder];
+}
+
+class $AssetsImagesLogoAppGen {
+  const $AssetsImagesLogoAppGen();
+
+  /// File path: assets/images/logo_app/logo.png
+  AssetGenImage get logo =>
+      const AssetGenImage('assets/images/logo_app/logo.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [logo];
 }
 
 class Assets {

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:abhay_app_v2/extension/color_extension.dart';
 import 'package:abhay_app_v2/resourese/service/app_service.dart';
 import 'package:abhay_app_v2/resourese/service/localization_service.dart';
@@ -9,16 +7,14 @@ import 'package:abhay_app_v2/theme/base_theme_data.dart';
 import 'package:abhay_app_v2/utils/app_constants.dart';
 import 'package:abhay_app_v2/utils/app_enums.dart';
 import 'package:abhay_app_v2/utils/local_storage.dart';
+import 'package:abhay_app_v2/utils/shared_key.dart';
 import 'package:abhay_app_v2/widget/reponsive/size_config.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
-import 'package:launch_at_startup/launch_at_startup.dart';
-import 'package:window_manager/window_manager.dart';
 
 // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -30,30 +26,12 @@ void main() async {
   await dotenv.load(fileName: '.env');
   await LocalStorage.init();
   await AppService.initAppService();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeRight, DeviceOrientation.landscapeLeft]);
-  if (Platform.isMacOS || Platform.isWindows || Platform.isLinux || kIsWeb) {
-    await windowManager.ensureInitialized();
-    WindowOptions windowOptions = WindowOptions(
-      size: const Size(1180, 820),
-      minimumSize: const Size(1000, 700),
-      center: true,
-      backgroundColor: appTheme.transparentColor,
-      titleBarStyle: Platform.isWindows ? TitleBarStyle.normal : TitleBarStyle.hidden,
-    );
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-      await windowManager.maximize();
-    });
-  }
-  if (Platform.isMacOS || Platform.isWindows) {
-    launchAtStartup.setup(appName: AppConstants.appName, appPath: Platform.resolvedExecutable);
-  }
-  // if (!Platform.isWindows) {
-  //   await Firebase.initializeApp();
-  //   NotificationService().onInit();
-  // }
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // await Firebase.initializeApp();
+  // NotificationService().onInit();
+
   runApp(LayoutBuilder(builder: (context, constraints) {
+    // SizeConfig.instance.init(constraints: constraints, screenHeight: 812, screenWidth: 375);
     SizeConfig.instance.init(
       constraints: constraints,
       screenHeight: constraints.maxHeight,
@@ -72,6 +50,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final token = LocalStorage.getString(SharedKey.token);
+
   @override
   void dispose() {
     themeUtil.dispose();
@@ -112,6 +92,7 @@ class _MyAppState extends State<MyApp> {
           ),
           scaffoldBackgroundColor: appTheme.whiteColor,
         ),
+        // initialRoute: token.isNotEmpty ? Routes.DASHBOARD : Routes.SIGN_IN,
         initialRoute: Routes.SPLASH,
         getPages: AppPages.pages,
         builder: EasyLoading.init(),

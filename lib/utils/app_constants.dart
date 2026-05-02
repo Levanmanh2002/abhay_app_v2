@@ -1,7 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
-  static const String appName = 'Unicorn client';
+  static const String appName = 'Abhay App';
 
   static const int minNameLength = 2;
   static const int minAddressLength = 12;
@@ -9,6 +9,7 @@ class AppConstants {
   static const int maxNameLength = 255;
   static const int timeOtp = 120;
   static const int secondsTimeBannerSlide = 5;
+  static const int otpLength = 4;
 
   static const int LIMIT = 20;
   static const int DEFAULT_VIP_LIMIT = 50;
@@ -29,6 +30,12 @@ class AppConstants {
   static const String all = 'all';
 
   //end-point
-  static const String loginUri = '/auth/login';
+  static const String loginUri = '/api/v1/login';
+  static const String signUpUri = '/api/v1/register';
+  static const String resendOtpUri = '/api/v1/resend-otp';
+  static const String verifyOtpUri = '/api/v1/verify';
+  static const String forgotPasswordUri = '/api/v1/reset-password';
+  static const String resetPasswordUri = '/api/v1/reset-password/update-password';
+
   static const String logoutUri = '/auth/logout';
 }

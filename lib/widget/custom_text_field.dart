@@ -170,7 +170,11 @@ class CustomTextFieldState extends State<CustomTextField> {
                           keyboardType: widget.isAmount ? TextInputType.number : widget.inputType,
                           cursorColor: widget.cursorColor ?? appTheme.appColor,
                           cursorWidth: widget.cursorWidth,
-                          textCapitalization: widget.capitalization,
+                          textCapitalization: widget.inputType == TextInputType.name ||
+                                  widget.inputType == TextInputType.streetAddress ||
+                                  widget.inputType == TextInputType.text
+                              ? TextCapitalization.sentences
+                              : widget.capitalization,
                           enabled: widget.isEnabled,
                           autofocus: false,
                           obscureText: widget.isPassword ? isObscured : false,
@@ -201,7 +205,7 @@ class CustomTextFieldState extends State<CustomTextField> {
                             floatingLabelBehavior: widget.floatingLabelBehavior,
                             counterStyle: const TextStyle(height: double.minPositive),
                             counterText: '',
-                            contentPadding: widget.contentPadding ?? padding(all: 16),
+                            contentPadding: widget.contentPadding ?? padding(all: 12),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(widget.borderRadius ?? 12),
                               borderSide: BorderSide(
