@@ -10,4 +10,9 @@ abstract class Routes {
   static const OTP = '/otp';
   static const CHANGE_PASSWORD = '/change_password';
   static const DASHBOARD = '/dashboard';
+  static const MY_INFO = '/my_info';
+  static const HTML = '/html';
+  static const CONTACT_SUPPORT = '/contact_support';
+  static const UPDATE_PASSWORD = '/update_password';
+  static const SUPERVISED_USERS = '/supervised_users';
 }

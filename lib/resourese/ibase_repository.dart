@@ -18,8 +18,8 @@ import 'package:http/http.dart' as http;
 class IBaseRepository {
   final int timeoutInSeconds = 60;
 
-  void handleError(error) {
-    loggerHelper.error(error);
+  void handleError(error, [StackTrace? stackTrace]) {
+    loggerHelper.error(error, stackTrace: stackTrace);
     if (error.osError != null) {
       final osError = error.osError;
       if (osError.errorCode == 101) {
@@ -37,7 +37,8 @@ class IBaseRepository {
       'Content-Type': 'application/json; charset=UTF-8',
       'Accept': 'application/json',
       'X-localization': LocalizationService.language.locale.languageCode,
-      'accesstoken': token,
+      'X-TOKEN-ACCESS': AppConstants.apiKey,
+      'Authorization': 'Bearer $token',
     };
   }
 
@@ -125,6 +126,37 @@ class IBaseRepository {
       return handleResponse(response, uri);
     } catch (e) {
       loggerHelper.error('====> Post API Error: $e');
+      rethrow;
+    }
+  }
+
+  Future<Response> clientPutMultipartData(
+    String uri,
+    Map<String, String> body,
+    List<MultipartBody> multipartBody, {
+    Map<String, String>? headers,
+  }) async {
+    try {
+      debugPrint('====> API Call: $uri\nHeader: ${getAuthorizationHeader()}');
+      debugPrint('====> API Body: $body with ${multipartBody.length} files');
+      http.MultipartRequest request = http.MultipartRequest('PUT', Uri.parse(AppConstants.baseUrl + uri));
+      request.headers.addAll(headers ?? getAuthorizationHeader());
+      for (MultipartBody multipart in multipartBody) {
+        if (multipart.file != null) {
+          File file = File(multipart.file!.path);
+          request.files.add(http.MultipartFile(
+            multipart.key,
+            file.readAsBytes().asStream(),
+            file.lengthSync(),
+            filename: file.path.split('/').last,
+          ));
+        }
+      }
+      request.fields.addAll(body);
+      http.Response response = await http.Response.fromStream(await request.send());
+      return handleResponse(response, uri);
+    } catch (e) {
+      loggerHelper.error('====> PUT AND FILES API Error: $e');
       rethrow;
     }
   }

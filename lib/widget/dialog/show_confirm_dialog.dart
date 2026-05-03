@@ -9,11 +9,11 @@ import 'package:get/get.dart';
 void showConfirmDialog({required String title, String titleBtn = '', VoidCallback? onConfirm, Color? colorBtn}) {
   Get.dialog(
     Dialog(
+      insetPadding: padding(horizontal: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       backgroundColor: appTheme.whiteColor,
       child: Container(
-        constraints: BoxConstraints(maxWidth: 452.w),
-        padding: padding(all: 24),
+        padding: padding(all: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

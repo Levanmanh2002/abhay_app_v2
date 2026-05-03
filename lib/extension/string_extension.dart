@@ -132,4 +132,8 @@ extension StringFormatting on String {
     if (this.length <= length) return this;
     return substring(this.length - length);
   }
+
+  String get removeAllStyle {
+    return replaceAll(RegExp(r'style="[^"]*"'), '');
+  }
 }

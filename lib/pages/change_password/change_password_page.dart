@@ -3,6 +3,7 @@ import 'package:abhay_app_v2/main.dart';
 import 'package:abhay_app_v2/pages/change_password/change_password_controller.dart';
 import 'package:abhay_app_v2/theme/style/style_theme.dart';
 import 'package:abhay_app_v2/utils/custom_validator.dart';
+import 'package:abhay_app_v2/utils/formatter_util.dart';
 import 'package:abhay_app_v2/widget/custom_button.dart';
 import 'package:abhay_app_v2/widget/custom_text_field.dart';
 import 'package:abhay_app_v2/widget/default_app_bar.dart';
@@ -53,6 +54,8 @@ class ChangePasswordPage extends GetWidget<ChangePasswordController> {
                         isPassword: true,
                         showBorder: false,
                         fillColor: appTheme.grayF3Color,
+                        inputType: TextInputType.visiblePassword,
+                        inputFormatters: FormatterUtil.passwordFormatter,
                         prefixIcon: Icon(Icons.lock_outline_rounded, color: appTheme.grayColor, size: 20.w),
                         onValidate: CustomValidator.validatePassword,
                       ),
@@ -64,6 +67,8 @@ class ChangePasswordPage extends GetWidget<ChangePasswordController> {
                         isPassword: true,
                         showBorder: false,
                         fillColor: appTheme.grayF3Color,
+                        inputType: TextInputType.visiblePassword,
+                        inputFormatters: FormatterUtil.passwordFormatter,
                         prefixIcon: Icon(Icons.lock_outline_rounded, color: appTheme.grayColor, size: 20.w),
                         onValidate: (value) {
                           if (value != controller.newPasswordController.text) {

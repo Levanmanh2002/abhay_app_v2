@@ -44,4 +44,7 @@ abstract class BaseThemeData {
 
   Color blueFFColor = const Color(0xFF00AAFF);
   Color blueBFFColor = const Color(0xFF006BFF);
+  Color blue68FFColor = const Color(0xFF0068FF);
+  Color blueF2Color = const Color(0xFF1877F2);
+  Color blue0FFColor = const Color(0xFFE8F0FF);
 }

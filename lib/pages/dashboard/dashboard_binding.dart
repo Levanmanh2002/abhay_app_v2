@@ -8,6 +8,6 @@ class DashboardBinding implements Bindings {
   void dependencies() {
     Get.put(DashboardController());
     Get.put(HomeController());
-    Get.put(ProfileController());
+    Get.put(ProfileController(profileRepository: Get.find()));
   }
 }

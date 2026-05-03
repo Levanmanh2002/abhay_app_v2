@@ -12,22 +12,12 @@ class AppConstants {
   static const int otpLength = 4;
 
   static const int LIMIT = 20;
-  static const int DEFAULT_VIP_LIMIT = 50;
-  static const int DEFAULT_NUMBER_OF_DAYS_CHECK_CUSTOMER_VIP = 4;
-  static const int DEFAULT_OLD_CUSTOMER_LIMIT = 2;
-  static const int DEFAULT_NUMBER_OF_DAYS_CALCULATE_CUSTOMER_VISIT = 30;
-  static const int MIN_LENGTH_NAME_SERVICE = 3;
-  static const int MAX_IMAGE_BANNER_STORE = 3;
-  static const int DEFAULT_POINT_RATIO_PER_USD = 100;
 
   static String baseUrl = dotenv.get('BASE_URL');
   static String socketUrl = dotenv.get('SOCKET_URL');
-  static String windowsNotificationGuid = dotenv.get('WINDOW_NOTI_GUID');
+  static String apiKey = dotenv.get('API_KEY');
 
-  static const String notificationChannelId = 'POSNAIL_IPAD_CHANNEL_ID';
-
-  static const String pos = 'pos';
-  static const String all = 'all';
+  static const String notificationChannelId = 'notification';
 
   //end-point
   static const String loginUri = '/api/v1/login';
@@ -36,6 +26,11 @@ class AppConstants {
   static const String verifyOtpUri = '/api/v1/verify';
   static const String forgotPasswordUri = '/api/v1/reset-password';
   static const String resetPasswordUri = '/api/v1/reset-password/update-password';
+  static const String profileUri = '/api/v1/auth';
+  static const String updateProfileUri = '/api/v1/auth/update';
+  static const String termsAndPoliciesUri = '/api/v1/setting/terms-policies';
+  static const String configInfoUri = '/api/v1/setting/contact';
+  static const String changePasswordUri = '/api/v1/auth/update-password';
 
   static const String logoutUri = '/auth/logout';
 }
