@@ -12,6 +12,8 @@ import 'package:abhay_app_v2/pages/my_info/my_info_binding.dart';
 import 'package:abhay_app_v2/pages/my_info/my_info_page.dart';
 import 'package:abhay_app_v2/pages/otp/otp_binding.dart';
 import 'package:abhay_app_v2/pages/otp/otp_page.dart';
+import 'package:abhay_app_v2/pages/settings/settings_binding.dart';
+import 'package:abhay_app_v2/pages/settings/settings_page.dart';
 import 'package:abhay_app_v2/pages/sign_in/sign_in_binding.dart';
 import 'package:abhay_app_v2/pages/sign_in/sign_in_page.dart';
 import 'package:abhay_app_v2/pages/sign_up/sign_up_binding.dart';
@@ -94,6 +96,11 @@ abstract class AppPages {
       name: Routes.UPSERT_SUPERVISED_USERS,
       page: () => UpsertSupervisedUsersPage(),
       binding: UpsertSupervisedUsersBinding(),
+    ),
+    GetPage(
+      name: Routes.SETTINGS,
+      page: () => SettingsPage(),
+      binding: SettingsBinding(),
     ),
   ];
 }

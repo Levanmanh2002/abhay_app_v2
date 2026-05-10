@@ -16,4 +16,5 @@ abstract class Routes {
   static const UPDATE_PASSWORD = '/update_password';
   static const SUPERVISED_USERS = '/supervised_users';
   static const UPSERT_SUPERVISED_USERS = '/upsert_supervised_users';
+  static const SETTINGS = '/settings';
 }
