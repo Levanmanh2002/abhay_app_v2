@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:abhay_app_v2/models/request/supervised_users/verify_otp_child_request.dart';
 import 'package:abhay_app_v2/pages/change_password/change_password_parameter.dart';
 import 'package:abhay_app_v2/pages/otp/otp_parameter.dart';
+import 'package:abhay_app_v2/pages/supervised_users/supervised_users_controller.dart';
 import 'package:abhay_app_v2/resourese/auth/iauth_repository.dart';
+import 'package:abhay_app_v2/resourese/supervised_users/isupervised_users_repository.dart';
 import 'package:abhay_app_v2/routes/pages.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/easyloading_utils.dart';
@@ -13,8 +16,9 @@ import 'package:get/get.dart';
 class OtpController extends GetxController {
   final OtpParameter parameter;
   final IAuthRepository authRepository;
+  final ISupervisedUsersRepository supervisedUsersRepository;
 
-  OtpController({required this.parameter, required this.authRepository});
+  OtpController({required this.parameter, required this.authRepository, required this.supervisedUsersRepository});
 
   final TextEditingController otpTextController = TextEditingController();
   final RxString verificationCode = ''.obs;
@@ -57,6 +61,20 @@ class OtpController extends GetxController {
     try {
       showEasyLoading();
 
+      if (parameter.type == OtpType.supervisedUser) {
+        final result = await supervisedUsersRepository.sendOTPChild(
+          fullName: parameter.supervisedUser?.fullname ?? '',
+          email: parameter.supervisedUser?.email ?? '',
+        );
+        if (result) {
+          verificationCode.value = '';
+          otpError.value = '';
+          otpTextController.clear();
+          startCountdown();
+        }
+        return;
+      }
+
       final response = await authRepository.resendOtp(parameter.email);
       if (response) {
         verificationCode.value = '';
@@ -75,6 +93,36 @@ class OtpController extends GetxController {
   Future<void> onConfirm() async {
     try {
       isLoading.value = true;
+
+      if (parameter.type == OtpType.supervisedUser) {
+        final request = VerifyOtpChildRequest(
+          fullname: parameter.supervisedUser?.fullname,
+          phoneVerified: parameter.supervisedUser?.phone,
+          email: parameter.supervisedUser?.email,
+          password: parameter.supervisedUser?.password,
+          passwordConfirmation: parameter.supervisedUser?.password,
+          gender: '1',
+          active: '1',
+          maxSound: '100',
+          maxSpeed: '100',
+          isStopAlert: '0',
+          delayTimeAlert: '10',
+          otp: verificationCode.value,
+        );
+        final result = await authRepository.verifyOTPAddChild(request);
+
+        if (result) {
+          if (Get.isRegistered<SupervisedUsersController>()) {
+            final supervisedUsersController = Get.find<SupervisedUsersController>();
+            supervisedUsersController.fetchSupervisedUsers();
+          }
+          Get.until((route) => Get.currentRoute == Routes.SUPERVISED_USERS);
+        } else {
+          otpError.value = 'otp_invalid'.tr;
+        }
+        return;
+      }
+
       final result = await authRepository.verifyOtp(parameter.email, verificationCode.value);
       if (result) {
         if (parameter.type == OtpType.forgotPassword) {

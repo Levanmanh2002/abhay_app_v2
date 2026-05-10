@@ -68,6 +68,10 @@ class UserModel {
 
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
+  static List<UserModel> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => UserModel.fromJson(json)).toList();
+  }
+
   UserModel copyWith({
     int? id,
     String? code,

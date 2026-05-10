@@ -31,6 +31,15 @@ class AppConstants {
   static const String termsAndPoliciesUri = '/api/v1/setting/terms-policies';
   static const String configInfoUri = '/api/v1/setting/contact';
   static const String changePasswordUri = '/api/v1/auth/update-password';
-
   static const String logoutUri = '/auth/logout';
+
+  static const String createSupervisedUsersUri = '/api/';
+  static const String sendOTPChildUri = '/api/v1/children/send-otp';
+  static const String verifyOTPAddChildUri = '/api/v1/children/verify-otp';
+  static const String getSupervisedUsersUri = '/api/v1/children';
+
+  static const String getRecipientsUri = '/api/v1/user-notifications';
+  static const String createRecipientUri = '/api/v1/users/show';
+  static const String getNotiAlertsUri = '/api/v1/notifications/alert';
 }
+

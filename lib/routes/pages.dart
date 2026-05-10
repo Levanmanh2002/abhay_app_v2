@@ -22,6 +22,8 @@ import 'package:abhay_app_v2/pages/supervised_users/supervised_users_binding.dar
 import 'package:abhay_app_v2/pages/supervised_users/supervised_users_page.dart';
 import 'package:abhay_app_v2/pages/update_password/update_password_binding.dart';
 import 'package:abhay_app_v2/pages/update_password/update_password_page.dart';
+import 'package:abhay_app_v2/pages/upsert_supervised_users/upsert_supervised_users_binding.dart';
+import 'package:abhay_app_v2/pages/upsert_supervised_users/upsert_supervised_users_page.dart';
 import 'package:get/get.dart';
 
 part 'routes.dart';
@@ -87,6 +89,11 @@ abstract class AppPages {
       name: Routes.SUPERVISED_USERS,
       page: () => SupervisedUsersPage(),
       binding: SupervisedUsersBinding(),
+    ),
+    GetPage(
+      name: Routes.UPSERT_SUPERVISED_USERS,
+      page: () => UpsertSupervisedUsersPage(),
+      binding: UpsertSupervisedUsersBinding(),
     ),
   ];
 }

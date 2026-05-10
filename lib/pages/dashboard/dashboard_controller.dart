@@ -1,5 +1,7 @@
 import 'package:abhay_app_v2/pages/home/home_page.dart';
+import 'package:abhay_app_v2/pages/noti/noti_page.dart';
 import 'package:abhay_app_v2/pages/profile/profile_page.dart';
+import 'package:abhay_app_v2/pages/recipients/recipients_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -9,8 +11,8 @@ class DashboardController extends GetxController {
 
   List<Widget> pages = [
     HomePage(),
-    const SizedBox(),
-    const SizedBox(),
+    RecipientsPage(),
+    NotiPage(),
     ProfilePage(),
   ];
 

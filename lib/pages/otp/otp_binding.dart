@@ -9,6 +9,7 @@ class OtpBinding implements Bindings {
       () => OtpController(
         parameter: Get.arguments,
         authRepository: Get.find(),
+        supervisedUsersRepository: Get.find(),
       ),
     );
   }

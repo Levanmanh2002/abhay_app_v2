@@ -1,4 +1,5 @@
 import 'package:abhay_app_v2/models/request/auth/sign_up_request_model.dart';
+import 'package:abhay_app_v2/models/request/supervised_users/verify_otp_child_request.dart';
 import 'package:abhay_app_v2/resourese/ibase_repository.dart';
 
 abstract class IAuthRepository extends IBaseRepository {
@@ -8,4 +9,5 @@ abstract class IAuthRepository extends IBaseRepository {
   Future<bool> verifyOtp(String email, String otp);
   Future<bool> forgotPassword(String email);
   Future<bool> resetPassword(String email, String password);
+  Future<bool> verifyOTPAddChild(VerifyOtpChildRequest request);
 }

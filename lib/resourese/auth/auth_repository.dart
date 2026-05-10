@@ -1,4 +1,5 @@
 import 'package:abhay_app_v2/models/request/auth/sign_up_request_model.dart';
+import 'package:abhay_app_v2/models/request/supervised_users/verify_otp_child_request.dart';
 import 'package:abhay_app_v2/resourese/auth/iauth_repository.dart';
 import 'package:abhay_app_v2/utils/app_constants.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
@@ -121,6 +122,24 @@ class AuthRepository extends IAuthRepository {
         return true;
       } else {
         DialogUtils.showErrorDialog(response.body['message'] ?? 'reset_password_failed'.tr);
+        return false;
+      }
+    } catch (error) {
+      handleError(error);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> verifyOTPAddChild(VerifyOtpChildRequest request) async {
+    try {
+      final response = await clientPostData(AppConstants.verifyOTPAddChildUri, request.toJson());
+
+      if (response.isOk) {
+        DialogUtils.showSuccessDialog('otp_verify_success'.tr);
+        return true;
+      } else {
+        DialogUtils.showErrorDialog(response.body['message'] ?? 'otp_verify_failed'.tr);
         return false;
       }
     } catch (error) {
