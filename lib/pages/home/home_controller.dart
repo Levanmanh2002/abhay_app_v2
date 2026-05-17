@@ -4,12 +4,9 @@ import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/logger_helper.dart';
 import 'package:get/get.dart';
 
-/// HomeController chỉ là bridge giữa UI và TrackingService.
-/// Không chứa bất kỳ logic GPS hay sensor nào.
 class HomeController extends GetxController {
   late final TrackingService _trackingService;
 
-  // ─── Reactive state (delegate tới TrackingService) ───────────────────────
   RxDouble get speed => _trackingService.speed;
   RxDouble get sound => _trackingService.sound;
   RxString get locationText => _trackingService.locationText;
@@ -17,25 +14,19 @@ class HomeController extends GetxController {
   RxBool get isOverSpeed => _trackingService.isOverSpeed;
   RxBool get isOverSound => _trackingService.isOverSound;
 
-  /// Từ khóa khẩn cấp vừa phát hiện qua microphone (null = không có)
   Rx<String?> get detectedKeyword => _trackingService.detectedKeyword;
 
-  /// Dismiss cảnh báo từ khóa thủ công
   void dismissKeywordAlert() => _trackingService.dismissKeywordAlert();
 
-  final RxDouble maxSpeed = 60.0.obs;
+  var maxSpeed = 60.0.obs;
 
-  // Loading state khi đang toggle tracking
-  final RxBool isTogglingTracking = false.obs;
+  var isTogglingTracking = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     _trackingService = Get.find<TrackingService>();
-    loggerHelper.logBlue('[HOME] Controller initialized');
   }
-
-  // ─── Actions ─────────────────────────────────────────────────────────────
 
   Future<void> onToggleTracking(UserModel? user) async {
     if (isTogglingTracking.value) return;
@@ -83,4 +74,6 @@ class HomeController extends GetxController {
     maxSpeed.value = (user.maxSpeed ?? 60).toDouble();
     _trackingService.applySettings(user);
   }
+
+  void onSosTrigger() {}
 }

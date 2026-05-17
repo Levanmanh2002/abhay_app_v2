@@ -6,6 +6,7 @@ import 'package:abhay_app_v2/pages/home/view/speed_gauge_view.dart';
 import 'package:abhay_app_v2/pages/profile/profile_controller.dart';
 import 'package:abhay_app_v2/theme/style/style_theme.dart';
 import 'package:abhay_app_v2/widget/reponsive/extension.dart';
+import 'package:abhay_app_v2/widget/sos_hold_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -14,15 +15,21 @@ class HomePage extends GetWidget<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appTheme.background,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Obx(
+        () => SosFab(
+          isTracking: controller.isTracking.value,
+          onConfirmed: controller.onSosTrigger,
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
-          padding: padding(horizontal: 16, top: 16, bottom: 32),
+          padding: padding(horizontal: 16, top: 16, bottom: 100),
           child: Column(
             spacing: 16.h,
             children: [
               HomeHeaderView(),
-              // Cảnh báo từ khóa khẩn cấp (hiện khi phát hiện giọng nói)
               Obx(() {
                 final kw = controller.detectedKeyword.value;
                 if (kw == null) return const SizedBox.shrink();
@@ -109,8 +116,6 @@ class HomePage extends GetWidget<HomeController> {
   }
 }
 
-/// Banner cảnh báo khi phát hiện từ khóa khẩn cấp qua microphone.
-/// Hiện animated từ trên xuống, có nút X để dismiss thủ công.
 class _KeywordAlertBanner extends StatefulWidget {
   const _KeywordAlertBanner({
     required this.keyword,
@@ -168,7 +173,7 @@ class _KeywordAlertBannerState extends State<_KeywordAlertBanner> with SingleTic
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF3CD),
+            color: const Color(0xFFFFF3CD), // amber-50
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFFFFB300), width: 1.5),
           ),
