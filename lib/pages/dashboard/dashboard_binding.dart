@@ -11,10 +11,10 @@ class DashboardBinding implements Bindings {
   void dependencies() {
     // HomeController phụ thuộc vào TrackingService (đã được put permanent trong AppService)
     Get.put(HomeController());
-    Get.put(ProfileController(profileRepository: Get.find()));
+    Get.put(ProfileController(notificationService: Get.find(), profileRepository: Get.find()));
     Get.put(RecipientsController(recipientsRepository: Get.find()));
     Get.put(ReceiveController(repository: Get.find()));
     Get.put(NotiController(notiRepository: Get.find()));
-    Get.put(DashboardController());
+    Get.put(DashboardController(notificationService: Get.find(), profileRepository: Get.find()));
   }
 }

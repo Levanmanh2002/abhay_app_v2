@@ -10,6 +10,7 @@ import 'package:abhay_app_v2/resourese/receive/ireceive_repository.dart';
 import 'package:abhay_app_v2/resourese/receive/receive_repository.dart';
 import 'package:abhay_app_v2/resourese/recipients/irecipients_repository.dart';
 import 'package:abhay_app_v2/resourese/recipients/recipients_repository.dart';
+import 'package:abhay_app_v2/resourese/service/notification/notification_service.dart';
 import 'package:abhay_app_v2/resourese/service/tracking/tracking_service.dart';
 import 'package:abhay_app_v2/resourese/supervised_users/isupervised_users_repository.dart';
 import 'package:abhay_app_v2/resourese/supervised_users/supervised_users_repository.dart';
@@ -29,5 +30,6 @@ class AppService {
     Get.put<IReceiveRepository>(ReceiveRepository());
 
     Get.put<TrackingService>(TrackingService(), permanent: true);
+    Get.put(NotificationService(), permanent: true);
   }
 }

@@ -1,4 +1,4 @@
-package com.app.abhay_v2
+package com.app.chaitany.abhay
 
 import io.flutter.embedding.android.FlutterActivity
 

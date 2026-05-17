@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "365562347965",
+    "project_id": "chaitany-abhay",
+    "storage_bucket": "chaitany-abhay.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:365562347965:android:397392b5e7855bc6b812d4",
+        "android_client_info": {
+          "package_name": "com.app.chaitany.abhay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB83cVE1wPXSGwM1lk5Leu0uow9FVyYl-Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

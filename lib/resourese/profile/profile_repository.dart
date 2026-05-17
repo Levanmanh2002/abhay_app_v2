@@ -110,4 +110,13 @@ class ProfileRepository extends IProfileRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> updateFcmToken(String fcmToken) async {
+    try {
+      await clientPostData(AppConstants.updateFcmTokenUri, {'device_token': fcmToken});
+    } catch (error) {
+      handleError(error);
+    }
+  }
 }

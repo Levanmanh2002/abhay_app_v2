@@ -14,4 +14,5 @@ abstract class IProfileRepository extends IBaseRepository {
     required String newPasswordConfirm,
   });
   Future<bool> logout();
+  Future<void> updateFcmToken(String fcmToken);
 }

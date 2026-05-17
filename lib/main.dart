@@ -10,35 +10,32 @@ import 'package:abhay_app_v2/utils/app_enums.dart';
 import 'package:abhay_app_v2/utils/local_storage.dart';
 import 'package:abhay_app_v2/utils/shared_key.dart';
 import 'package:abhay_app_v2/widget/reponsive/size_config.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
-// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 AppThemeUtil themeUtil = AppThemeUtil();
 BaseThemeData get appTheme => themeUtil.getAppTheme();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Phải gọi trước khi runApp để nhận data từ background task
   FlutterForegroundTask.initCommunicationPort();
 
   await dotenv.load(fileName: '.env');
   await LocalStorage.init();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await Firebase.initializeApp();
   await AppService.initAppService();
 
-  // Khởi tạo cấu hình foreground service (1 lần duy nhất)
   ForegroundServiceManager.init();
-
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  // await Firebase.initializeApp();
-  // NotificationService().onInit();
 
   runApp(LayoutBuilder(builder: (context, constraints) {
     // SizeConfig.instance.init(constraints: constraints, screenHeight: 812, screenWidth: 375);

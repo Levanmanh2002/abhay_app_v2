@@ -1,6 +1,7 @@
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
 import 'package:abhay_app_v2/pages/home/home_controller.dart';
 import 'package:abhay_app_v2/resourese/profile/iprofile_repository.dart';
+import 'package:abhay_app_v2/resourese/service/notification/notification_service.dart';
 import 'package:abhay_app_v2/routes/pages.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/easyloading_utils.dart';
@@ -10,9 +11,10 @@ import 'package:abhay_app_v2/utils/shared_key.dart';
 import 'package:get/get.dart';
 
 class ProfileController extends GetxController {
+  final NotificationService notificationService;
   final IProfileRepository profileRepository;
 
-  ProfileController({required this.profileRepository});
+  ProfileController({required this.notificationService, required this.profileRepository});
 
   Rx<UserModel?> userModel = Rx<UserModel?>(null);
   var isLoading = false.obs;
@@ -55,9 +57,7 @@ class ProfileController extends GetxController {
 
       // Dừng tracking trước khi logout
       if (Get.isRegistered<HomeController>()) {
-        await Get.find<HomeController>().isTracking.value
-            ? Get.find<HomeController>().onToggleTracking(null)
-            : null;
+        Get.find<HomeController>().isTracking.value ? Get.find<HomeController>().onToggleTracking(null) : null;
       }
 
       DialogUtils.showSuccessDialog('logout_success'.tr);
@@ -66,6 +66,7 @@ class ProfileController extends GetxController {
       if (savedLanguage.isNotEmpty) {
         await LocalStorage.setString(SharedKey.language, savedLanguage);
       }
+      await notificationService.deleteFcmToken();
       Get.offAllNamed(Routes.SIGN_IN);
     } catch (error, stackTrace) {
       loggerHelper.error('Failed to logout: $error', stackTrace: stackTrace);
