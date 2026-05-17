@@ -152,8 +152,10 @@ const Map<String, String> en = {
   'settings_speed_limit': 'Speed limit',
   'settings_sound_limit': 'Max sound limit',
   'settings_stop_alert': 'Sudden stop alert',
+  'settings_measuring_sound': 'Measure ambient noise',
   'settings_delay_time': 'Delay before sending alert',
   'settings_delay_time_note': 'Wait time after detecting an event',
   'settings_save_success': 'Settings saved successfully',
   'settings_save_failed': 'Failed to save settings',
+  'voice_keyword_detected': 'Emergency keyword detected!',
 };

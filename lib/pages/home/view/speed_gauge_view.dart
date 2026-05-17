@@ -12,7 +12,7 @@ class SpeedGaugeView extends GetView<HomeController> {
     return Obx(() {
       final speed = controller.speed.value;
       final limit = controller.maxSpeed.value;
-      final isOver = speed > limit;
+      final isOver = controller.isOverSpeed.value;
       final color = isOver ? appTheme.errorColor : appTheme.appColor;
       final progressWidth = (speed / 250 * 20).clamp(4.0, 20.0);
 
@@ -113,10 +113,10 @@ class SpeedGaugeView extends GetView<HomeController> {
                         Icon(Icons.speed_rounded, size: 14.w, color: color),
                       ],
                     ),
-                    if (controller.isAutoDetect.value) ...[
+                    if (controller.isTracking.value && limit > 0) ...[
                       SizedBox(height: 4.h),
                       Text(
-                        '${'home_auto_detect'.tr} ${limit.round()}',
+                        '${'home_limit'.tr} ${limit.round()} km/h',
                         style: StyleThemeData.size10Weight400(color: appTheme.gray86Color),
                       ),
                     ],

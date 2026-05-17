@@ -8,10 +8,11 @@ import 'package:get/get.dart';
 class DashboardBinding implements Bindings {
   @override
   void dependencies() {
-    Get.put(DashboardController());
+    // HomeController phụ thuộc vào TrackingService (đã được put permanent trong AppService)
     Get.put(HomeController());
+    Get.put(ProfileController(profileRepository: Get.find()));
     Get.put(RecipientsController(recipientsRepository: Get.find()));
     Get.put(NotiController(notiRepository: Get.find()));
-    Get.put(ProfileController(profileRepository: Get.find()));
+    Get.put(DashboardController());
   }
 }

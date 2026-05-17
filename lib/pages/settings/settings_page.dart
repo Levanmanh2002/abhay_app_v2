@@ -153,14 +153,25 @@ class SettingsPage extends GetWidget<SettingsController> {
 
   Widget _buildSoundSection() {
     return Obx(
-      () => _buildSlider(
-        label: 'settings_sound_limit'.tr,
-        value: controller.soundLimit.value,
-        min: 50,
-        max: 120,
-        unit: 'dB',
-        color: const Color(0xFFFF6B35),
-        onChanged: (v) => controller.soundLimit.value = v,
+      () => Column(
+        spacing: 12.h,
+        children: [
+          _buildToggleRow(
+            label: 'settings_measuring_sound'.tr,
+            value: controller.isMeasuringSound.value,
+            onChanged: (v) => controller.isMeasuringSound.value = v,
+          ),
+          if (controller.isMeasuringSound.value)
+            _buildSlider(
+              label: 'settings_sound_limit'.tr,
+              value: controller.soundLimit.value,
+              min: 50,
+              max: 120,
+              unit: 'dB',
+              color: const Color(0xFFFF6B35),
+              onChanged: (v) => controller.soundLimit.value = v,
+            ),
+        ],
       ),
     );
   }

@@ -39,7 +39,15 @@ dependencies:
   flutter_html: ^3.0.0
   url_launcher: ^6.3.2
   sleek_circular_slider: ^2.0.1
-  
+
+  # Tracking & sensors
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+  flutter_foreground_task: ^8.13.0
+  record: ^6.2.0         # thay noise_meter (audio_streamer không tương thích AGP 8+)
+  speech_to_text: ^7.0.0
+  permission_handler: ^11.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,4 +1,5 @@
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
+import 'package:abhay_app_v2/pages/home/home_controller.dart';
 import 'package:abhay_app_v2/resourese/profile/iprofile_repository.dart';
 import 'package:abhay_app_v2/routes/pages.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
@@ -14,7 +15,6 @@ class ProfileController extends GetxController {
   ProfileController({required this.profileRepository});
 
   Rx<UserModel?> userModel = Rx<UserModel?>(null);
-
   var isLoading = false.obs;
 
   @override
@@ -27,8 +27,12 @@ class ProfileController extends GetxController {
     try {
       isLoading.value = true;
       final profile = await profileRepository.getProfile();
-
       userModel.value = profile;
+
+      // Notify HomeController: apply settings + auto-resume tracking nếu cần
+      if (profile != null && Get.isRegistered<HomeController>()) {
+        await Get.find<HomeController>().onUserLoaded(profile);
+      }
     } catch (error, stackTrace) {
       loggerHelper.error('Failed to fetch profile: $error', stackTrace: stackTrace);
     } finally {
@@ -36,22 +40,32 @@ class ProfileController extends GetxController {
     }
   }
 
+  /// Cập nhật local model sau khi sửa thông tin (tránh gọi lại API)
   void updateProfile(UserModel updatedUser) {
     userModel.value = updatedUser;
+    // Notify HomeController để apply settings mới ngay lập tức
+    if (Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().onSettingsChanged(updatedUser);
+    }
   }
 
   void onLogout() async {
     try {
       showEasyLoading();
 
-      DialogUtils.showSuccessDialog('logout_success'.tr);
-      String? savedLanguage = LocalStorage.getString(SharedKey.language);
+      // Dừng tracking trước khi logout
+      if (Get.isRegistered<HomeController>()) {
+        await Get.find<HomeController>().isTracking.value
+            ? Get.find<HomeController>().onToggleTracking(null)
+            : null;
+      }
 
+      DialogUtils.showSuccessDialog('logout_success'.tr);
+      final savedLanguage = LocalStorage.getString(SharedKey.language);
       await LocalStorage.clearAll();
       if (savedLanguage.isNotEmpty) {
         await LocalStorage.setString(SharedKey.language, savedLanguage);
       }
-
       Get.offAllNamed(Routes.SIGN_IN);
     } catch (error, stackTrace) {
       loggerHelper.error('Failed to logout: $error', stackTrace: stackTrace);

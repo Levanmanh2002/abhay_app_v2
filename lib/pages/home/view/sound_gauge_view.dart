@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 class SoundGaugeView extends GetView<HomeController> {
-  static const _soundColor = Color(0xFFFF6B35); // orange
+  static const _soundColor = Color(0xFFFF6B35);
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +18,14 @@ class SoundGaugeView extends GetView<HomeController> {
       final sound = controller.sound.value;
       final limit = user?.maxSound?.toDouble() ?? 80.0;
       final isMeasuring = (user?.isMeasuringSound ?? 0) == 1;
-      final isOver = isMeasuring && sound > limit;
+      final isOver = controller.isOverSound.value;
       final color = !isMeasuring
           ? appTheme.grayColor
           : isOver
               ? appTheme.errorColor
               : _soundColor;
-      final progressWidth = isMeasuring ? (sound / 150 * 20).clamp(4.0, 20.0) : 4.0;
+      final progressWidth =
+          isMeasuring ? (sound / 150 * 20).clamp(4.0, 20.0) : 4.0;
 
       return Container(
         padding: padding(all: 20),

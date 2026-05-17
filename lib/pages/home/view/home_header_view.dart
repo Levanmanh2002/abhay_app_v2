@@ -65,13 +65,19 @@ class HomeHeaderView extends GetView<HomeController> {
                         Icon(
                           Icons.location_on_outlined,
                           size: 12.w,
-                          color: controller.location.value.isEmpty ? appTheme.grayColor : appTheme.appColor,
+                          color: controller.locationText.value.isEmpty
+                              ? appTheme.grayColor
+                              : appTheme.appColor,
                         ),
                         Expanded(
                           child: Text(
-                            controller.location.value.isEmpty ? 'home_locating'.tr : controller.location.value,
+                            controller.locationText.value.isEmpty
+                                ? 'home_locating'.tr
+                                : controller.locationText.value,
                             style: StyleThemeData.size12Weight400(
-                              color: controller.location.value.isEmpty ? appTheme.grayColor : appTheme.gray86Color,
+                              color: controller.locationText.value.isEmpty
+                                  ? appTheme.grayColor
+                                  : appTheme.gray86Color,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

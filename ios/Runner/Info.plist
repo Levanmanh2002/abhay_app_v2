@@ -45,5 +45,29 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Location permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs location access to monitor your speed and send safety alerts.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs background location access to continue monitoring speed when minimized.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs background location access to continue monitoring speed when minimized.</string>
+
+	<!-- Microphone (noise meter) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone to measure ambient noise levels and detect emergency voice keywords.</string>
+
+	<!-- Speech recognition (voice keyword detection) -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app listens for emergency keywords like "help" or "cứu với" to send safety alerts automatically.</string>
+
+	<!-- Background execution modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
 </dict>
 </plist>

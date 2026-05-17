@@ -1,6 +1,7 @@
 import 'package:abhay_app_v2/extension/color_extension.dart';
 import 'package:abhay_app_v2/resourese/service/app_service.dart';
 import 'package:abhay_app_v2/resourese/service/localization_service.dart';
+import 'package:abhay_app_v2/resourese/service/tracking/foreground_service_manager.dart';
 import 'package:abhay_app_v2/routes/pages.dart';
 import 'package:abhay_app_v2/theme/app_theme_util.dart';
 import 'package:abhay_app_v2/theme/base_theme_data.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
@@ -23,9 +25,17 @@ BaseThemeData get appTheme => themeUtil.getAppTheme();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Phải gọi trước khi runApp để nhận data từ background task
+  FlutterForegroundTask.initCommunicationPort();
+
   await dotenv.load(fileName: '.env');
   await LocalStorage.init();
   await AppService.initAppService();
+
+  // Khởi tạo cấu hình foreground service (1 lần duy nhất)
+  ForegroundServiceManager.init();
+
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   // await Firebase.initializeApp();
   // NotificationService().onInit();

@@ -1,4 +1,6 @@
+import 'package:abhay_app_v2/models/request/profile/user_request_model.dart';
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
+import 'package:abhay_app_v2/pages/profile/profile_controller.dart';
 import 'package:abhay_app_v2/resourese/profile/iprofile_repository.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/logger_helper.dart';
@@ -15,6 +17,7 @@ class SettingsController extends GetxController {
 
   // Sound
   final RxDouble soundLimit = 80.0.obs;
+  final RxBool isMeasuringSound = false.obs;
 
   // Stop alert
   final RxBool isStopAlert = false.obs;
@@ -29,10 +32,23 @@ class SettingsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadSettings();
+    _loadFromProfileController();
   }
 
-  Future<void> _loadSettings() async {
+  /// Ưu tiên đọc từ ProfileController (đã có sẵn, không cần gọi API lại)
+  void _loadFromProfileController() {
+    if (Get.isRegistered<ProfileController>()) {
+      final user = Get.find<ProfileController>().userModel.value;
+      if (user != null) {
+        _fillFromUser(user);
+        return;
+      }
+    }
+    // Fallback: gọi API nếu ProfileController chưa có data
+    _loadFromApi();
+  }
+
+  Future<void> _loadFromApi() async {
     try {
       isLoading.value = true;
       final user = await profileRepository.getProfile();
@@ -49,6 +65,7 @@ class SettingsController extends GetxController {
     soundLimit.value = user.maxSound?.toDouble() ?? 80.0;
     isStopAlert.value = (user.isStopAlert ?? 0) == 1;
     autoDetectSpeed.value = (user.isAutoDetectSpeedLimit ?? 0) == 1;
+    isMeasuringSound.value = (user.isMeasuringSound ?? 0) == 1;
     final delay = user.delayTimeAlert ?? 5;
     delayTime.value = '${delay}s';
   }
@@ -57,21 +74,26 @@ class SettingsController extends GetxController {
     try {
       isSaving.value = true;
 
-      // final delaySeconds = int.tryParse(
-      //       delayTime.value.replaceAll('s', ''),
-      //     ) ??
-      //     5;
+      final delaySeconds = int.tryParse(delayTime.value.replaceAll('s', '')) ?? 5;
 
-      // final params = UpdateUserParams(
-      //   maxSpeed: speedLimit.value.round(),
-      //   maxSound: soundLimit.value.round(),
-      //   isStopAlert: isStopAlert.value ? 1 : 0,
-      //   isAutoDetectSpeedLimit: autoDetectSpeed.value ? 1 : 0,
-      //   delayTimeAlert: delaySeconds,
-      // );
+      final params = UpdateUserParams(
+        maxSpeed: speedLimit.value.round(),
+        maxSound: soundLimit.value.round(),
+        isStopAlert: isStopAlert.value ? 1 : 0,
+        isAutoDetectSpeedLimit: autoDetectSpeed.value ? 1 : 0,
+        isMeasuringSound: isMeasuringSound.value ? 1 : 0,
+        delayTimeAlert: delaySeconds,
+      );
 
-      // await profileRepository.updateProfile(params, []);
-      // DialogUtils.showSuccessDialog('settings_save_success'.tr);
+      final updated = await profileRepository.updateProfile(params, []);
+
+      if (updated != null) {
+        // Sync ProfileController
+        if (Get.isRegistered<ProfileController>()) {
+          Get.find<ProfileController>().updateProfile(updated);
+        }
+        // HomeController.onSettingsChanged đã được gọi trong ProfileController.updateProfile()
+      }
     } catch (e) {
       loggerHelper.error('Save settings failed: $e');
       DialogUtils.showErrorDialog('settings_save_failed'.tr);

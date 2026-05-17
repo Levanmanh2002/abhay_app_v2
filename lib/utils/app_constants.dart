@@ -41,5 +41,9 @@ class AppConstants {
   static const String getRecipientsUri = '/api/v1/user-notifications';
   static const String createRecipientUri = '/api/v1/users/show';
   static const String getNotiAlertsUri = '/api/v1/notifications/alert';
+
+  // Tracking / Alert
+  static const String sendAlertUri = '/api/v1/notifications/send-notification';
+  static const String updateUserUri = '/api/v1/auth/update';
 }
 

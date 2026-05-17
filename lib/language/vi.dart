@@ -153,8 +153,10 @@ const Map<String, String> vi = {
   'settings_speed_limit': 'Giới hạn tốc độ',
   'settings_sound_limit': 'Giới hạn âm thanh',
   'settings_stop_alert': 'Cảnh báo dừng đột ngột',
+  'settings_measuring_sound': 'Đo mức độ tiếng ồn',
   'settings_delay_time': 'Thời gian chờ trước khi gửi cảnh báo',
   'settings_delay_time_note': 'Khoảng chờ sau khi phát hiện sự kiện',
   'settings_save_success': 'Lưu cài đặt thành công',
   'settings_save_failed': 'Lưu cài đặt thất bại',
+  'voice_keyword_detected': 'Từ khóa khẩn cấp đã được phát hiện!',
 };

@@ -17,7 +17,7 @@ class RecipientsPage extends GetWidget<RecipientsController> {
       backgroundColor: appTheme.background,
       appBar: DefaultAppBar(
         title: 'tab_recipients'.tr,
-        isBackIconCustom: true,
+        backButton: false,
         backgroundColor: appTheme.background,
         actions: [
           Padding(
