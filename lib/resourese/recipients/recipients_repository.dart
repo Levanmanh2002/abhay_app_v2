@@ -9,17 +9,14 @@ class RecipientsRepository extends IRecipientsRepository {
   Future<List<RecipientsModel>> getRecipients() async {
     try {
       final response = await clientGetData(AppConstants.getRecipientsUri);
-
       if (response.isOk) {
         final List<dynamic> data = response.body['data'] ?? [];
-        final List<RecipientsModel> recipients = RecipientsModel.fromJsonList(data);
-        return recipients;
-      } else {
-        DialogUtils.showErrorDialog(response.body['message']);
-        return [];
+        return RecipientsModel.fromJsonList(data);
       }
-    } catch (error) {
-      handleError(error);
+      DialogUtils.showErrorDialog(response.body['message']);
+      return [];
+    } catch (error, st) {
+      handleError(error, st);
       rethrow;
     }
   }
@@ -28,17 +25,55 @@ class RecipientsRepository extends IRecipientsRepository {
   Future<bool> createRecipient(String code) async {
     try {
       final response = await clientGetData('${AppConstants.createRecipientUri}/$code');
-
       if (response.isOk) {
-        DialogUtils.showErrorDialog(response.body['message']);
+        DialogUtils.showSuccessDialog(response.body['message']);
         return true;
-      } else {
-        DialogUtils.showErrorDialog(response.body['message']);
-        return false;
       }
-    } catch (error) {
-      handleError(error);
+      DialogUtils.showErrorDialog(response.body['message']);
+      return false;
+    } catch (error, st) {
+      handleError(error, st);
       rethrow;
+    }
+  }
+
+  @override
+  Future<bool> deleteRecipient(int id) async {
+    try {
+      final response = await clientGetData('${AppConstants.deleteRecipientUri}/$id');
+
+      return response.isOk;
+    } catch (error, st) {
+      handleError(error, st);
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> updateRecipient({
+    required int id,
+    String? receiverEmail,
+    String? receiverPhone,
+    required int isPush,
+    required int isEmail,
+    required int isSms,
+  }) async {
+    try {
+      final response = await clientPutData(
+        AppConstants.updateRecipientUri,
+        {
+          'id': id.toString(),
+          'receiver_email': receiverEmail ?? '',
+          'receiver_phone': receiverPhone ?? '',
+          'is_push_notification': isPush.toString(),
+          'is_email_notification': isEmail.toString(),
+          'is_sms_notification': isSms.toString(),
+        },
+      );
+      return response.isOk;
+    } catch (error, st) {
+      handleError(error, st);
+      return false;
     }
   }
 }

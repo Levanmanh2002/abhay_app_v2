@@ -1,6 +1,10 @@
 import 'package:abhay_app_v2/pages/home/home_page.dart';
+import 'package:abhay_app_v2/pages/noti/noti_controller.dart';
 import 'package:abhay_app_v2/pages/noti/noti_page.dart';
 import 'package:abhay_app_v2/pages/profile/profile_page.dart';
+import 'package:abhay_app_v2/pages/receive/receive_controller.dart';
+import 'package:abhay_app_v2/pages/receive/receive_page.dart';
+import 'package:abhay_app_v2/pages/recipients/recipients_controller.dart';
 import 'package:abhay_app_v2/pages/recipients/recipients_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +16,7 @@ class DashboardController extends GetxController {
   List<Widget> pages = [
     HomePage(),
     RecipientsPage(),
+    ReceivePage(),
     NotiPage(),
     ProfilePage(),
   ];
@@ -24,6 +29,13 @@ class DashboardController extends GetxController {
   }
 
   void goToTab(int page) {
+    if (page == 1) {
+      Get.find<RecipientsController>().onRefresh();
+    } else if (page == 2) {
+      Get.find<ReceiveController>().onRefresh();
+    } else if (page == 3) {
+      Get.find<NotiController>().onRefresh();
+    }
     currentPage.value = page;
     pageController.jumpToPage(page);
   }

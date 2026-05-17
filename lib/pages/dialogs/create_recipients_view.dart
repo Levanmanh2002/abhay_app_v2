@@ -32,16 +32,10 @@ class _CreateRecipientsViewState extends State<CreateRecipientsView> {
   var isLoading = false.obs;
   var isValid = false.obs;
 
-  @override
-  void initState() {
-    super.initState();
-    codeController.addListener(() {
-      isValid.value = codeController.text.trim().isNotEmpty;
-    });
-  }
-
   void createRecipient() async {
     try {
+      isLoading.value = true;
+
       final code = codeController.text.trim();
 
       final result = await recipientsRepository.createRecipient(code);
@@ -52,6 +46,8 @@ class _CreateRecipientsViewState extends State<CreateRecipientsView> {
       }
     } catch (e) {
       loggerHelper.error('Failed to create recipient: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -114,6 +110,7 @@ class _CreateRecipientsViewState extends State<CreateRecipientsView> {
                 showBorder: false,
                 fillColor: appTheme.grayF3Color,
                 prefixIcon: Icon(Icons.tag_rounded, color: appTheme.grayColor, size: 20.w),
+                onChanged: (value) => isValid.value = value.trim().isNotEmpty,
               ),
               SizedBox(height: 8.h),
               Text(
@@ -121,10 +118,12 @@ class _CreateRecipientsViewState extends State<CreateRecipientsView> {
                 style: StyleThemeData.size12Weight400(color: appTheme.gray86Color),
               ),
               SizedBox(height: 24.h),
-              CustomButton(
-                buttonText: 'confirm'.tr,
-                isLoading: isLoading.value,
-                onPressed: isValid.value ? createRecipient : null,
+              Obx(
+                () => CustomButton(
+                  buttonText: 'confirm'.tr,
+                  isLoading: isLoading.value,
+                  onPressed: isValid.value ? createRecipient : null,
+                ),
               ),
             ],
           ),

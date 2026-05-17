@@ -1,4 +1,5 @@
 import 'package:abhay_app_v2/utils/diacritic_utils.dart';
+import 'package:get/get.dart';
 
 extension StringToInt on String? {
   int get toIntValue {
@@ -7,6 +8,21 @@ extension StringToInt on String? {
 
   double get toDoubleValue {
     return double.tryParse(this ?? '') ?? 0;
+  }
+
+  String get formatTimeAgo {
+    if (this == null) return '';
+    try {
+      final dt = DateTime.parse(this!).toLocal();
+      final diff = DateTime.now().difference(dt);
+      if (diff.inMinutes < 1) return 'just_now'.tr;
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+      if (diff.inHours < 24) return '${diff.inHours}h';
+      if (diff.inDays < 7) return '${diff.inDays}d';
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return '';
+    }
   }
 }
 

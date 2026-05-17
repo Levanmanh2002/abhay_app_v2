@@ -40,10 +40,16 @@ class AppConstants {
 
   static const String getRecipientsUri = '/api/v1/user-notifications';
   static const String createRecipientUri = '/api/v1/users/show';
+  static const String deleteRecipientUri = '/api/v1/user-notifications';
+  static const String updateRecipientUri = '/api/v1/user-notifications/update';
+
   static const String getNotiAlertsUri = '/api/v1/notifications/alert';
+  static const String getReceivedAlertsUri = '/api/v1/notifications/alert'; // GET - nhận từ người khác
+  static const String getReceiverRequestsUri = '/api/v1/requests';
+  static const String confirmReceiverRequestUri = '/api/v1/requests/confirm'; // GET /{id}
+  static const String deleteReceiverRequestUri = '/api/v1/requests/delete'; // GET /{id}
 
   // Tracking / Alert
   static const String sendAlertUri = '/api/v1/notifications/send-notification';
   static const String updateUserUri = '/api/v1/auth/update';
 }
-

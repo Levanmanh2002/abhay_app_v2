@@ -18,6 +18,12 @@ class NotiController extends GetxController {
     fetchNotiAlerts();
   }
 
+  void onRefresh() async {
+    if (notiAlerts.isEmpty) {
+      fetchNotiAlerts();
+    }
+  }
+
   void fetchNotiAlerts() async {
     try {
       isLoading.value = true;

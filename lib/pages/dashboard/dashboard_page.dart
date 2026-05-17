@@ -25,7 +25,7 @@ class DashboardPage extends GetWidget<DashboardController> {
             color: appTheme.whiteColor,
           ),
           child: AnimatedBottomNavigationBar.builder(
-            itemCount: 4,
+            itemCount: controller.pages.length,
             tabBuilder: (int index, bool isActive) {
               IconData icon;
               String label;
@@ -39,11 +39,15 @@ class DashboardPage extends GetWidget<DashboardController> {
                   label = 'recipients'.tr;
                   break;
                 case 2:
-                  icon = controller.currentPage.value == 2 ? Icons.notifications : Icons.notifications_none;
-                  label = 'alert_received'.tr;
+                  icon = isActive ? Icons.inbox : Icons.inbox_outlined;
+                  label = 'tab_received'.tr;
                   break;
                 case 3:
-                  icon = controller.currentPage.value == 3 ? Icons.person : Icons.person_outline;
+                  icon = controller.currentPage.value == 3 ? Icons.notifications : Icons.notifications_none;
+                  label = 'alert_received'.tr;
+                  break;
+                case 4:
+                  icon = controller.currentPage.value == 4 ? Icons.person : Icons.person_outline;
                   label = 'profile'.tr;
                   break;
                 default:

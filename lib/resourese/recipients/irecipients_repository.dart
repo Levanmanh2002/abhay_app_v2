@@ -5,4 +5,13 @@ import '../ibase_repository.dart';
 abstract class IRecipientsRepository extends IBaseRepository {
   Future<List<RecipientsModel>> getRecipients();
   Future<bool> createRecipient(String code);
+  Future<bool> deleteRecipient(int id);
+  Future<bool> updateRecipient({
+    required int id,
+    String? receiverEmail,
+    String? receiverPhone,
+    required int isPush,
+    required int isEmail,
+    required int isSms,
+  });
 }
