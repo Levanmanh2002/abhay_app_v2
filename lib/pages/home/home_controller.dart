@@ -1,10 +1,17 @@
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
+import 'package:abhay_app_v2/resourese/home/ihome_repository.dart';
+import 'package:abhay_app_v2/resourese/service/location_service.dart';
 import 'package:abhay_app_v2/resourese/service/tracking/tracking_service.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
+import 'package:abhay_app_v2/utils/easyloading_utils.dart';
 import 'package:abhay_app_v2/utils/logger_helper.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
+  final IHomeRepository homeRepository;
+
+  HomeController({required this.homeRepository});
+
   late final TrackingService _trackingService;
 
   RxDouble get speed => _trackingService.speed;
@@ -75,5 +82,25 @@ class HomeController extends GetxController {
     _trackingService.applySettings(user);
   }
 
-  void onSosTrigger() {}
+  void onSosTrigger() async {
+    try {
+      showEasyLoading();
+      final position = await LocationService.to.getPosition();
+
+      if (position == null) {
+        DialogUtils.showErrorDialog('Unable to get current location. Please ensure location services are enabled.');
+        return;
+      }
+      await homeRepository.onSosSend(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        address: _trackingService.locationText.value,
+      );
+    } catch (e, st) {
+      loggerHelper.error('[HOME] SOS trigger error: $e', stackTrace: st);
+      DialogUtils.showErrorDialog('Failed to trigger SOS. Please try again.');
+    } finally {
+      dismissEasyLoading();
+    }
+  }
 }

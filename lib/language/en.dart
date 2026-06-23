@@ -191,4 +191,7 @@ const Map<String, String> en = {
   'settings_save_success': 'Settings saved successfully',
   'settings_save_failed': 'Failed to save settings',
   'voice_keyword_detected': 'Emergency keyword detected!',
+
+  'sos_send_success': 'SOS alert sent successfully',
+  'sos_send_failed': 'Failed to send SOS alert',
 };

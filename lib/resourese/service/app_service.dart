@@ -1,5 +1,7 @@
 import 'package:abhay_app_v2/resourese/auth/auth_repository.dart';
 import 'package:abhay_app_v2/resourese/auth/iauth_repository.dart';
+import 'package:abhay_app_v2/resourese/home/home_repository.dart';
+import 'package:abhay_app_v2/resourese/home/ihome_repository.dart';
 import 'package:abhay_app_v2/resourese/html/html_repository.dart';
 import 'package:abhay_app_v2/resourese/html/ihtml_repository.dart';
 import 'package:abhay_app_v2/resourese/noti/inoti_repository.dart';
@@ -10,6 +12,7 @@ import 'package:abhay_app_v2/resourese/receive/ireceive_repository.dart';
 import 'package:abhay_app_v2/resourese/receive/receive_repository.dart';
 import 'package:abhay_app_v2/resourese/recipients/irecipients_repository.dart';
 import 'package:abhay_app_v2/resourese/recipients/recipients_repository.dart';
+import 'package:abhay_app_v2/resourese/service/location_service.dart';
 import 'package:abhay_app_v2/resourese/service/notification/notification_service.dart';
 import 'package:abhay_app_v2/resourese/service/tracking/tracking_service.dart';
 import 'package:abhay_app_v2/resourese/supervised_users/isupervised_users_repository.dart';
@@ -28,7 +31,9 @@ class AppService {
     Get.put<INotiRepository>(NotiRepository());
     Get.put<ITrackingRepository>(TrackingRepository());
     Get.put<IReceiveRepository>(ReceiveRepository());
+    Get.put<IHomeRepository>(HomeRepository());
 
+    Get.put(LocationService(), permanent: true);
     Get.put<TrackingService>(TrackingService(), permanent: true);
     Get.put(NotificationService(), permanent: true);
   }

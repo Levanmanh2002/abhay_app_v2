@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:abhay_app_v2/models/request/alert/alert_request_model.dart';
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
+import 'package:abhay_app_v2/resourese/home/ihome_repository.dart';
+import 'package:abhay_app_v2/resourese/service/location_service.dart';
 import 'package:abhay_app_v2/resourese/tracking/itracking_repository.dart';
+import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/local_storage.dart';
 import 'package:abhay_app_v2/utils/logger_helper.dart';
+import 'package:abhay_app_v2/utils/map_utils.dart';
 import 'package:abhay_app_v2/utils/shared_key.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -32,6 +36,7 @@ class TrackingService extends GetxService {
   final RxBool isOverSound = false.obs;
   final RxDouble detectedSpeedLimit = 0.0.obs;
   final Rx<String?> detectedKeyword = Rx<String?>(null);
+  Position? _currentPosition;
 
   // ─── Internals ────────────────────────────────────────────────────────────
   late final ITrackingRepository _repo;
@@ -180,6 +185,8 @@ class TrackingService extends GetxService {
   }
 
   Future<void> _onPosition(Position position) async {
+    _currentPosition = position;
+
     final result = _gpsFilter.filter(position);
     if (result == null) return;
 
@@ -218,12 +225,39 @@ class TrackingService extends GetxService {
     isOverSound.value = dba > _maxSound;
   }
 
-  void _onKeywordDetected(String keyword) {
+  void _onKeywordDetected(String keyword) async {
     detectedKeyword.value = keyword;
     loggerHelper.logBlue('[VOICE] Detected: "$keyword"');
 
-    // TODO: gọi API khi có endpoint
-    // await _repo.sendEmergencyAlert(keyword: keyword, ...);
+    final IHomeRepository homeRepository = Get.find<IHomeRepository>();
+
+    if ((_currentPosition?.latitude ?? 0) == 0 || (_currentPosition?.longitude ?? 0) == 0) {
+      final position = await LocationService.to.getPosition();
+
+      if (position == null) {
+        DialogUtils.showErrorDialog('Unable to get current location. Please ensure location services are enabled.');
+        return;
+      }
+
+      final fullAddress = await MapUtils.getAddressFromPosition(position);
+      await homeRepository.onSosSend(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        address: fullAddress.fullAddress.isNotEmpty
+            ? fullAddress.fullAddress
+            : locationText.value.isNotEmpty
+                ? locationText.value
+                : '${position.latitude}, ${position.longitude}',
+      );
+      return;
+    }
+
+    await homeRepository.onSosSend(
+      latitude: _currentPosition?.latitude ?? 0.0,
+      longitude: _currentPosition?.longitude ?? 0.0,
+      address: locationText.value,
+      content: '[VOICE] Detected: "$keyword"',
+    );
 
     Future.delayed(_keywordAlertDuration, () {
       if (detectedKeyword.value == keyword) detectedKeyword.value = null;

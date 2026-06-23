@@ -192,4 +192,7 @@ const Map<String, String> vi = {
   'settings_save_success': 'Lưu cài đặt thành công',
   'settings_save_failed': 'Lưu cài đặt thất bại',
   'voice_keyword_detected': 'Từ khóa khẩn cấp đã được phát hiện!',
+
+  'sos_send_success': 'Đã gửi cảnh báo SOS thành công',
+  'sos_send_failed': 'Gửi cảnh báo SOS thất bại',
 };
