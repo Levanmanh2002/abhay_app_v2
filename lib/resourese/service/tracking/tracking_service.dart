@@ -342,4 +342,18 @@ class TrackingService extends GetxService {
   }
 
   static Future<bool> isLocationServiceEnabled() => Geolocator.isLocationServiceEnabled();
+
+  /// Toggle sound nhanh từ Home — không đợi Settings save
+  void setSoundEnabled(bool enabled) {
+    _isMeasuringSound = enabled;
+    LocalStorage.setBool(SharedKey.cachedIsMeasuringSound, enabled);
+    if (isTracking.value) {
+      _stopVoice();
+      _startVoice(); // restart với onSoundLevel mới
+    }
+    if (!enabled) {
+      sound.value = 0.0;
+      isOverSound.value = false;
+    }
+  }
 }

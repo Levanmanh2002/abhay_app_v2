@@ -215,4 +215,6 @@ const Map<String, String> vi = {
   'alert_msg_speed': 'Bạn đang chạy quá tốc độ!',
   'alert_msg_sudden_stop': 'Phát hiện dừng đột ngột!',
   'alert_msg_stopped': 'Xe đã dừng lại.',
+  'sound_on': 'Bật',
+  'sound_off': 'Tắt',
 };

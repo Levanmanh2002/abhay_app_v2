@@ -17,15 +17,14 @@ class SoundGaugeView extends GetView<HomeController> {
       final user = profileController.userModel.value;
       final sound = controller.sound.value;
       final limit = user?.maxSound?.toDouble() ?? 80.0;
-      final isMeasuring = (user?.isMeasuringSound ?? 0) == 1;
+      final isMeasuring = controller.isSoundEnabled.value;
       final isOver = controller.isOverSound.value;
       final color = !isMeasuring
           ? appTheme.grayColor
           : isOver
               ? appTheme.errorColor
               : _soundColor;
-      final progressWidth =
-          isMeasuring ? (sound / 150 * 20).clamp(4.0, 20.0) : 4.0;
+      final progressWidth = isMeasuring ? (sound / 150 * 20).clamp(4.0, 20.0) : 4.0;
 
       return Container(
         padding: padding(all: 20),
@@ -68,26 +67,54 @@ class SoundGaugeView extends GetView<HomeController> {
                   ],
                 ),
                 // Measuring badge / limit badge
-                Container(
-                  padding: padding(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withAlpha(15),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Row(
-                    spacing: 4.w,
-                    children: [
-                      Icon(
-                        isMeasuring ? Icons.warning_amber_rounded : Icons.mic_off_rounded,
-                        size: 10.w,
-                        color: color,
+                Row(
+                  spacing: 8.w,
+                  children: [
+                    // Toggle button
+                    GestureDetector(
+                      onTap: controller.toggleSound,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: padding(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isMeasuring ? _soundColor.withAlpha(20) : appTheme.grayF3Color,
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(
+                            color: isMeasuring ? _soundColor.withAlpha(60) : appTheme.grayE6Color,
+                          ),
+                        ),
+                        child: Row(
+                          spacing: 4.w,
+                          children: [
+                            Icon(
+                              isMeasuring ? Icons.mic_rounded : Icons.mic_off_rounded,
+                              size: 11.w,
+                              color: isMeasuring ? _soundColor : appTheme.grayColor,
+                            ),
+                            Text(
+                              isMeasuring ? 'sound_on'.tr : 'sound_off'.tr,
+                              style: StyleThemeData.size10Weight700(
+                                color: isMeasuring ? _soundColor : appTheme.grayColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(
-                        isMeasuring ? '${'home_limit'.tr} ${limit.round()} dB' : 'home_sound_off'.tr,
-                        style: StyleThemeData.size10Weight700(color: color),
+                    ),
+                    // Limit badge (chỉ hiện khi bật)
+                    if (isMeasuring)
+                      Container(
+                        padding: padding(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withAlpha(15),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          '${'home_limit'.tr} ${limit.round()} dB',
+                          style: StyleThemeData.size10Weight700(color: color),
+                        ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
               ],
             ),

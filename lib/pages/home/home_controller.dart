@@ -28,6 +28,7 @@ class HomeController extends GetxController {
   var maxSpeed = 60.0.obs;
 
   var isTogglingTracking = false.obs;
+  var isSoundEnabled = false.obs;
 
   @override
   void onInit() {
@@ -69,6 +70,7 @@ class HomeController extends GetxController {
   /// Gọi khi ProfileController load xong user → apply settings + auto-resume
   Future<void> onUserLoaded(UserModel user) async {
     maxSpeed.value = (user.maxSpeed ?? 60).toDouble();
+    isSoundEnabled.value = (user.isMeasuringSound ?? 0) == 1;
 
     if (isTracking.value) {
       loggerHelper.logBlue('[HOME] Auto-resuming tracking after app restart');
@@ -102,5 +104,11 @@ class HomeController extends GetxController {
     } finally {
       dismissEasyLoading();
     }
+  }
+
+  // Thêm method này (sau onSettingsChanged)
+  void toggleSound() {
+    isSoundEnabled.value = !isSoundEnabled.value;
+    _trackingService.setSoundEnabled(isSoundEnabled.value);
   }
 }

@@ -215,4 +215,6 @@ const Map<String, String> en = {
   'alert_msg_sudden_stop': 'Sudden stop detected!',
   'alert_msg_stopped': 'Vehicle has stopped.',
   'alert_msg_unknown': 'Safety alert triggered.',
+  'sound_on': 'On',
+  'sound_off': 'Off',
 };
