@@ -16,6 +16,9 @@ class AppConstants {
   static String baseUrl = dotenv.get('BASE_URL');
   static String socketUrl = dotenv.get('SOCKET_URL');
   static String apiKey = dotenv.get('API_KEY');
+  static String tomtomApiKey = dotenv.get('TOMTOM_API_KEY');
+  static String keySpeedLimit = dotenv.get('KEY_SPEED_LIMIT');
+  static String urlSpeedLimit = dotenv.get('URL_SPEED_LIMIT');
 
   static const String notificationChannelId = 'notification';
 
@@ -49,10 +52,16 @@ class AppConstants {
   static const String getReceiverRequestsUri = '/api/v1/requests';
   static const String confirmReceiverRequestUri = '/api/v1/requests/confirm'; // GET /{id}
   static const String deleteReceiverRequestUri = '/api/v1/requests/delete'; // GET /{id}
+  static const String getAcceptedSendersUri = '/api/v1/user-notifications/get-sender';
 
   // Tracking / Alert
   static const String sendAlertUri = '/api/v1/notifications/send-notification';
+  static const String alertHistoryUri = '/api/v1/notifications/send-alert-history';
   static const String updateUserUri = '/api/v1/auth/update';
 
   static const String sosUri = '/api/v1/sos/send';
+
+  // TomTom Traffic Incidents API
+  // key dùng chung KEY_SPEED_LIMIT (đã có quyền Traffic Incidents API)
+  static const String trafficIncidentsUrl = 'https://api.tomtom.com/traffic/services/5/incidentDetails';
 }

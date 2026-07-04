@@ -1,3 +1,5 @@
+import 'package:abhay_app_v2/resourese/alert_history/alert_history_repository.dart';
+import 'package:abhay_app_v2/resourese/alert_history/ialert_history_repository.dart';
 import 'package:abhay_app_v2/resourese/auth/auth_repository.dart';
 import 'package:abhay_app_v2/resourese/auth/iauth_repository.dart';
 import 'package:abhay_app_v2/resourese/home/home_repository.dart';
@@ -32,6 +34,7 @@ class AppService {
     Get.put<ITrackingRepository>(TrackingRepository());
     Get.put<IReceiveRepository>(ReceiveRepository());
     Get.put<IHomeRepository>(HomeRepository());
+    Get.put<IAlertHistoryRepository>(AlertHistoryRepository());
 
     Get.put(LocationService(), permanent: true);
     Get.put<TrackingService>(TrackingService(), permanent: true);

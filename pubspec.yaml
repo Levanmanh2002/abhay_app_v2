@@ -50,6 +50,8 @@ dependencies:
   record: ^6.2.0         # thay noise_meter (audio_streamer không tương thích AGP 8+)
   speech_to_text: ^7.0.0
   permission_handler: ^11.3.1
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
 
 dev_dependencies:
   flutter_test:

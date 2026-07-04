@@ -1,3 +1,5 @@
+import 'package:abhay_app_v2/pages/alert_history/alert_history_binding.dart';
+import 'package:abhay_app_v2/pages/alert_history/alert_history_page.dart';
 import 'package:abhay_app_v2/pages/change_password/change_password_binding.dart';
 import 'package:abhay_app_v2/pages/change_password/change_password_page.dart';
 import 'package:abhay_app_v2/pages/contact_support/contact_support_binding.dart';
@@ -8,6 +10,8 @@ import 'package:abhay_app_v2/pages/forgot_password/forgot_password_binding.dart'
 import 'package:abhay_app_v2/pages/forgot_password/forgot_password_page.dart';
 import 'package:abhay_app_v2/pages/html/html_binding.dart';
 import 'package:abhay_app_v2/pages/html/html_page.dart';
+import 'package:abhay_app_v2/pages/map_app/map_app_binding.dart';
+import 'package:abhay_app_v2/pages/map_app/map_app_page.dart';
 import 'package:abhay_app_v2/pages/my_info/my_info_binding.dart';
 import 'package:abhay_app_v2/pages/my_info/my_info_page.dart';
 import 'package:abhay_app_v2/pages/otp/otp_binding.dart';
@@ -101,6 +105,16 @@ abstract class AppPages {
       name: Routes.SETTINGS,
       page: () => SettingsPage(),
       binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: Routes.MAP_APP,
+      page: () => MapAppPage(),
+      binding: MapAppBinding(),
+    ),
+    GetPage(
+      name: Routes.ALERT_HISTORY,
+      page: () => AlertHistoryPage(),
+      binding: AlertHistoryBinding(),
     ),
   ];
 }

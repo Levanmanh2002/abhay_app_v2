@@ -17,4 +17,6 @@ abstract class Routes {
   static const SUPERVISED_USERS = '/supervised_users';
   static const UPSERT_SUPERVISED_USERS = '/upsert_supervised_users';
   static const SETTINGS = '/settings';
+  static const MAP_APP = '/map_app';
+  static const ALERT_HISTORY = '/alert_history';
 }

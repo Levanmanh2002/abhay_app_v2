@@ -62,6 +62,11 @@ class ProfilePage extends GetWidget<ProfileController> {
                           labelKey: 'profile_supervised_users',
                           onTap: () => Get.toNamed(Routes.SUPERVISED_USERS),
                         ),
+                        MenuItem(
+                          icon: Icons.history_rounded,
+                          labelKey: 'alert_history_title',
+                          onTap: () => Get.toNamed(Routes.ALERT_HISTORY),
+                        ),
                       ],
                     ),
                     SizedBox(height: 12.h),

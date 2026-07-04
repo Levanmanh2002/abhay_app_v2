@@ -65,19 +65,13 @@ class HomeHeaderView extends GetView<HomeController> {
                         Icon(
                           Icons.location_on_outlined,
                           size: 12.w,
-                          color: controller.locationText.value.isEmpty
-                              ? appTheme.grayColor
-                              : appTheme.appColor,
+                          color: controller.locationText.value.isEmpty ? appTheme.grayColor : appTheme.appColor,
                         ),
                         Expanded(
                           child: Text(
-                            controller.locationText.value.isEmpty
-                                ? 'home_locating'.tr
-                                : controller.locationText.value,
+                            controller.locationText.value.isEmpty ? 'home_locating'.tr : controller.locationText.value,
                             style: StyleThemeData.size12Weight400(
-                              color: controller.locationText.value.isEmpty
-                                  ? appTheme.grayColor
-                                  : appTheme.gray86Color,
+                              color: controller.locationText.value.isEmpty ? appTheme.grayColor : appTheme.gray86Color,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -115,6 +109,23 @@ class HomeHeaderView extends GetView<HomeController> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: () => Get.toNamed(Routes.MAP_APP),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 36.w,
+                height: 36.w,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: appTheme.appColor.withAlpha(15),
+                ),
+                child: Icon(
+                  Icons.map_rounded,
+                  size: 18.w,
+                  color: appTheme.appColor,
                 ),
               ),
             ),
