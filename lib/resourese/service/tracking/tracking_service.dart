@@ -4,6 +4,7 @@ import 'package:abhay_app_v2/models/request/alert/alert_request_model.dart';
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
 import 'package:abhay_app_v2/resourese/home/ihome_repository.dart';
 import 'package:abhay_app_v2/resourese/service/location_service.dart';
+import 'package:abhay_app_v2/resourese/service/map/tom_tom_service.dart';
 import 'package:abhay_app_v2/resourese/tracking/itracking_repository.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/local_storage.dart';
@@ -49,17 +50,24 @@ class TrackingService extends GetxService {
   final _gpsFilter = GpsFilter();
   final _suddenStop = SuddenStopDetector();
   final _locationHelper = LocationHelper();
+  final _tomtomSvc = TomTomService();
 
   // ─── User settings ────────────────────────────────────────────────────────
   double _maxSpeed = 60.0;
   double _maxSound = 80.0;
   bool _isStopAlertEnabled = false;
   bool _isMeasuringSound = false;
+  bool _isAutoDetectSpeedLimit = false;
   int _delaySeconds = 10;
+
+  // TomTom detected speed limit (0 = chưa có)
+  double _tomtomSpeedLimit = 0.0;
 
   // ─── Alert cooldown ───────────────────────────────────────────────────────
   static const int _suddenStopCooldownSec = 30;
   static const int _stopAlertCooldownSec = 60;
+  // Sau khi gửi speed alert thành công → đợi 5 phút trước khi gửi tiếp
+  static const int _speedAlertCooldownSec = 300;
 
   double _lastSpeed = 0.0;
   bool _hasSentStopAlert = false;
@@ -131,6 +139,7 @@ class TrackingService extends GetxService {
     _maxSound = (user.maxSound ?? 80).toDouble();
     _isStopAlertEnabled = (user.isStopAlert ?? 0) == 1;
     _isMeasuringSound = (user.isMeasuringSound ?? 0) == 1;
+    _isAutoDetectSpeedLimit = (user.isAutoDetectSpeedLimit ?? 0) == 1;
     _delaySeconds = user.delayTimeAlert ?? 10;
   }
 
@@ -192,7 +201,23 @@ class TrackingService extends GetxService {
 
     final speedKmh = result.speedKmh;
     speed.value = speedKmh;
-    isOverSpeed.value = speedKmh > _maxSpeed && speedKmh > 5;
+
+    // Fetch TomTom speed limit nếu auto detect bật
+    if (_isAutoDetectSpeedLimit) {
+      final ttLimit = await _tomtomSvc.getSpeedLimit(
+        position.latitude,
+        position.longitude,
+      );
+      if (ttLimit > 0) {
+        _tomtomSpeedLimit = ttLimit;
+        detectedSpeedLimit.value = ttLimit;
+      }
+    }
+
+    // Effective limit: dùng TomTom nếu có, fallback về maxSpeed user set
+    final effectiveLimit = (_isAutoDetectSpeedLimit && _tomtomSpeedLimit > 0) ? _tomtomSpeedLimit : _maxSpeed;
+
+    isOverSpeed.value = speedKmh > effectiveLimit && speedKmh > 5;
 
     final address = await _locationHelper.getAddress(position);
     if (address.isNotEmpty) locationText.value = address;
@@ -267,10 +292,13 @@ class TrackingService extends GetxService {
   // ─── Alert logic ─────────────────────────────────────────────────────────
 
   Future<void> _checkOverSpeedAlert(double speedKmh, Position pos) async {
-    if (speedKmh <= _maxSpeed || speedKmh <= 15) return;
-    if (!_canSendAlert(SharedKey.lastSpeedAlertAt, _delaySeconds)) return;
+    // Dùng TomTom limit nếu auto detect bật và đã có data, fallback về maxSpeed
+    final effectiveLimit = (_isAutoDetectSpeedLimit && _tomtomSpeedLimit > 0) ? _tomtomSpeedLimit : _maxSpeed;
+
+    if (speedKmh <= effectiveLimit || speedKmh <= 15) return;
+    if (!_canSendAlert(SharedKey.lastSpeedAlertAt, _speedAlertCooldownSec)) return;
     _markAlertSent(SharedKey.lastSpeedAlertAt);
-    await _send(type: 2, speedKmh: speedKmh, position: pos);
+    await _send(type: 2, speedKmh: speedKmh, position: pos, speedLimit: effectiveLimit);
   }
 
   Future<void> _checkSuddenStopAlert(double speedKmh, Position pos) async {
@@ -298,19 +326,28 @@ class TrackingService extends GetxService {
     required int type,
     required double speedKmh,
     required Position position,
+    double? speedLimit, // optional — nếu null thì dùng _maxSpeed
   }) async {
     final address = await LocationHelper.geocode(position.latitude, position.longitude);
+    final locationStr = address.isNotEmpty
+        ? address
+        : '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+    final limit = speedLimit ?? _maxSpeed;
     final params = AlertRequestModel(
       type: type,
-      location: address,
+      location: locationStr,
       lat: position.latitude,
       lng: position.longitude,
       speed: speedKmh,
       sound: _isMeasuringSound ? sound.value : 0,
-      speedLimit: _maxSpeed.toInt(),
+      speedLimit: limit.toInt(),
     );
     final ok = await _repo.sendAlert(params);
-    if (!ok) loggerHelper.error('[TRACKING] Alert type=$type failed');
+    if (!ok)
+      loggerHelper.error('[TRACKING] Alert type=$type failed');
+    else
+      loggerHelper.success(
+          '[TRACKING] Alert type=$type sent (limit=${limit.toInt()} km/h, speed=${speedKmh.toStringAsFixed(1)})');
   }
 
   // ─── Cooldown helpers ─────────────────────────────────────────────────────

@@ -19,4 +19,5 @@ abstract class Routes {
   static const SETTINGS = '/settings';
   static const MAP_APP = '/map_app';
   static const ALERT_HISTORY = '/alert_history';
+  static const RECEIVED_ALERT_DETAIL = '/received_alert_detail';
 }

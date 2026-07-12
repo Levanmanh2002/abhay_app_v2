@@ -38,11 +38,15 @@ class _CreateRecipientsViewState extends State<CreateRecipientsView> {
 
       final code = codeController.text.trim();
 
-      final result = await recipientsRepository.createRecipient(code);
+      final id = await recipientsRepository.createRecipient(code);
 
-      if (result) {
-        recipientsController.fetchRecipients();
-        Get.back();
+      if (id != -1) {
+        final result = await recipientsRepository.addRequest(userId: id);
+
+        if (result) {
+          recipientsController.fetchRecipients();
+          Get.back();
+        }
       }
     } catch (e) {
       loggerHelper.error('Failed to create recipient: $e');

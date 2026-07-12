@@ -1,7 +1,9 @@
 import 'package:abhay_app_v2/main.dart';
 import 'package:abhay_app_v2/models/response/noti_alert/noti_alert_model.dart';
 import 'package:abhay_app_v2/pages/alert_history/alert_history_controller.dart';
+import 'package:abhay_app_v2/resourese/service/location_service.dart';
 import 'package:abhay_app_v2/theme/style/style_theme.dart';
+import 'package:abhay_app_v2/utils/launch_url.dart';
 import 'package:abhay_app_v2/widget/default_app_bar.dart';
 import 'package:abhay_app_v2/widget/reponsive/extension.dart';
 import 'package:flutter/material.dart';
@@ -111,133 +113,143 @@ class _AlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final typeConfig = _typeConfig(alert.type);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: appTheme.whiteColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: typeConfig.color.withAlpha(15),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: padding(horizontal: 16, top: 16, bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 8.h,
-              children: [
-                // Date + recipient row
-                Row(
-                  children: [
-                    Icon(Icons.access_time_rounded, size: 14.w, color: appTheme.grayColor),
-                    SizedBox(width: 4.w),
-                    Text(
-                      _formatDate(alert.createdAt),
-                      style: StyleThemeData.size12Weight400(color: appTheme.gray86Color),
-                    ),
-                    const Spacer(),
-                    // Type badge
-                    Container(
-                      padding: padding(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: typeConfig.color.withAlpha(20),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 4.w,
-                        children: [
-                          Icon(typeConfig.icon, size: 11.w, color: typeConfig.color),
-                          Text(
-                            typeConfig.label.tr,
-                            style: StyleThemeData.size10Weight700(color: typeConfig.color),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+    return InkWell(
+      onTap: () async {
+        final determinePosition = await LocationService.to.getPosition();
 
-                // Location
-                if (alert.location?.isNotEmpty == true)
+        launchMapsDirURl(
+          start: '${determinePosition?.latitude}, ${determinePosition?.longitude}',
+          end: '${alert.lat ?? ''}, ${alert.lng ?? ''}',
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: appTheme.whiteColor,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: typeConfig.color.withAlpha(15),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: padding(horizontal: 16, top: 16, bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 8.h,
+                children: [
+                  // Date + recipient row
                   Row(
-                    spacing: 5.w,
                     children: [
-                      Icon(Icons.location_on_rounded, size: 14.w, color: appTheme.appColor),
-                      Expanded(
-                        child: Text(
-                          alert.location!,
-                          style: StyleThemeData.size14Weight700(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      Icon(Icons.access_time_rounded, size: 14.w, color: appTheme.grayColor),
+                      SizedBox(width: 4.w),
+                      Text(
+                        _formatDate(alert.createdAt),
+                        style: StyleThemeData.size12Weight400(color: appTheme.gray86Color),
+                      ),
+                      const Spacer(),
+                      // Type badge
+                      Container(
+                        padding: padding(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: typeConfig.color.withAlpha(20),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          spacing: 4.w,
+                          children: [
+                            Icon(typeConfig.icon, size: 11.w, color: typeConfig.color),
+                            Text(
+                              typeConfig.label.tr,
+                              style: StyleThemeData.size10Weight700(color: typeConfig.color),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
 
-                // Speed + Sound row
-                Row(
-                  spacing: 16.w,
-                  children: [
-                    _MetricChip(
-                      icon: Icons.speed_rounded,
-                      value: '${alert.speed?.toStringAsFixed(2) ?? '--'} km/h',
-                      color: appTheme.appColor,
-                    ),
-                    _MetricChip(
-                      icon: Icons.volume_up_rounded,
-                      value: '${alert.sound?.toStringAsFixed(2) ?? '--'} dB',
-                      color: const Color(0xFFFF6B35),
-                    ),
-                  ],
-                ),
-
-                // Warning message
-                Container(
-                  width: double.infinity,
-                  padding: padding(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: typeConfig.color.withAlpha(12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: typeConfig.color.withAlpha(40)),
-                  ),
-                  child: Row(
-                    spacing: 6.w,
-                    children: [
-                      Icon(Icons.warning_amber_rounded, size: 14.w, color: typeConfig.color),
-                      Expanded(
-                        child: Text(
-                          typeConfig.message.tr,
-                          style: StyleThemeData.size12Weight700(color: typeConfig.color),
+                  // Location
+                  if (alert.location?.isNotEmpty == true)
+                    Row(
+                      spacing: 5.w,
+                      children: [
+                        Icon(Icons.location_on_rounded, size: 14.w, color: appTheme.appColor),
+                        Expanded(
+                          child: Text(
+                            alert.location!,
+                            style: StyleThemeData.size14Weight700(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                      ],
+                    ),
+
+                  // Speed + Sound row
+                  Row(
+                    spacing: 16.w,
+                    children: [
+                      _MetricChip(
+                        icon: Icons.speed_rounded,
+                        value: '${alert.speed?.toStringAsFixed(2) ?? '--'} km/h',
+                        color: appTheme.appColor,
+                      ),
+                      _MetricChip(
+                        icon: Icons.volume_up_rounded,
+                        value: '${alert.sound?.toStringAsFixed(2) ?? '--'} dB',
+                        color: const Color(0xFFFF6B35),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          // Map
-          if (alert.lat != null && alert.lng != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-              child: SizedBox(
-                height: 180.h,
-                child: _AlertMap(lat: alert.lat!, lng: alert.lng!),
+                  // Warning message
+                  Container(
+                    width: double.infinity,
+                    padding: padding(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: typeConfig.color.withAlpha(12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: typeConfig.color.withAlpha(40)),
+                    ),
+                    child: Row(
+                      spacing: 6.w,
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 14.w, color: typeConfig.color),
+                        Expanded(
+                          child: Text(
+                            typeConfig.message.tr,
+                            style: StyleThemeData.size12Weight700(color: typeConfig.color),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
+
+            // Map
+            if (alert.lat != null && alert.lng != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+                child: SizedBox(
+                  height: 180.h,
+                  child: _AlertMap(lat: alert.lat!, lng: alert.lng!),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

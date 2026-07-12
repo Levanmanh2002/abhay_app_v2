@@ -7,4 +7,5 @@ abstract class IReceiveRepository extends IBaseRepository {
   Future<List<ReceiverModel>> getReceiverRequests();
   Future<bool> acceptRequest(int id);
   Future<bool> rejectRequest(int id);
+  Future<NotiAlertModel?> getAlertDetail(int id);
 }

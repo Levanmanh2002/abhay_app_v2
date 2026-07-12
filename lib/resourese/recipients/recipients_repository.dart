@@ -22,15 +22,15 @@ class RecipientsRepository extends IRecipientsRepository {
   }
 
   @override
-  Future<bool> createRecipient(String code) async {
+  Future<int> createRecipient(String code) async {
     try {
       final response = await clientGetData('${AppConstants.createRecipientUri}/$code');
       if (response.isOk) {
         DialogUtils.showSuccessDialog(response.body['message']);
-        return true;
+        return response.body['data']['id'];
       }
       DialogUtils.showErrorDialog(response.body['message']);
-      return false;
+      return -1;
     } catch (error, st) {
       handleError(error, st);
       rethrow;
@@ -71,6 +71,25 @@ class RecipientsRepository extends IRecipientsRepository {
         },
       );
       return response.isOk;
+    } catch (error, st) {
+      handleError(error, st);
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> addRequest({required int userId}) async {
+    try {
+      final response = await clientPostData(AppConstants.addRequestUri, {
+        'user_id': userId.toString(),
+      });
+      if (response.isOk) {
+        DialogUtils.showSuccessDialog(response.body['message']);
+        return true;
+      } else {
+        DialogUtils.showErrorDialog(response.body['message']);
+        return false;
+      }
     } catch (error, st) {
       handleError(error, st);
       return false;

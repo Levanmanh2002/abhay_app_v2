@@ -16,6 +16,8 @@ import 'package:abhay_app_v2/pages/my_info/my_info_binding.dart';
 import 'package:abhay_app_v2/pages/my_info/my_info_page.dart';
 import 'package:abhay_app_v2/pages/otp/otp_binding.dart';
 import 'package:abhay_app_v2/pages/otp/otp_page.dart';
+import 'package:abhay_app_v2/pages/received_alert_detail/received_alert_detail_binding.dart';
+import 'package:abhay_app_v2/pages/received_alert_detail/received_alert_detail_page.dart';
 import 'package:abhay_app_v2/pages/settings/settings_binding.dart';
 import 'package:abhay_app_v2/pages/settings/settings_page.dart';
 import 'package:abhay_app_v2/pages/sign_in/sign_in_binding.dart';
@@ -115,6 +117,11 @@ abstract class AppPages {
       name: Routes.ALERT_HISTORY,
       page: () => AlertHistoryPage(),
       binding: AlertHistoryBinding(),
+    ),
+    GetPage(
+      name: Routes.RECEIVED_ALERT_DETAIL,
+      page: () => ReceivedAlertDetailPage(),
+      binding: ReceivedAlertDetailBinding(),
     ),
   ];
 }

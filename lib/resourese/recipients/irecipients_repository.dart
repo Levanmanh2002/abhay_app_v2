@@ -4,7 +4,7 @@ import '../ibase_repository.dart';
 
 abstract class IRecipientsRepository extends IBaseRepository {
   Future<List<RecipientsModel>> getRecipients();
-  Future<bool> createRecipient(String code);
+  Future<int> createRecipient(String code);
   Future<bool> deleteRecipient(int id);
   Future<bool> updateRecipient({
     required int id,
@@ -14,4 +14,5 @@ abstract class IRecipientsRepository extends IBaseRepository {
     required int isEmail,
     required int isSms,
   });
+  Future<bool> addRequest({required int userId});
 }

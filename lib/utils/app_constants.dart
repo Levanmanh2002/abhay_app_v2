@@ -42,10 +42,13 @@ class AppConstants {
   static const String verifyOTPAddChildUri = '/api/v1/children/verify-otp';
   static const String getSupervisedUsersUri = '/api/v1/children';
 
+  static const String addRequestUri = '/api/v1/requests/add';
+  static const String getUserLocationHistoryUri = '/api/v1/children/location-history';
   static const String getRecipientsUri = '/api/v1/user-notifications';
   static const String createRecipientUri = '/api/v1/users/show';
   static const String deleteRecipientUri = '/api/v1/user-notifications';
   static const String updateRecipientUri = '/api/v1/user-notifications/update';
+  static const String getAlertDetailUri = '/api/v1/notifications/alert-show';
 
   static const String getNotiAlertsUri = '/api/v1/notifications/alert';
   static const String getReceivedAlertsUri = '/api/v1/notifications/alert'; // GET - nhận từ người khác

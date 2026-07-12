@@ -12,24 +12,26 @@ import 'package:get/get.dart';
 class RequestsTabView extends GetView<ReceiveController> {
   @override
   Widget build(BuildContext context) {
-    if (controller.isLoadingRequests.value) {
-      return Center(child: CircularProgressIndicator(color: appTheme.appColor));
-    }
-    if (controller.requests.isEmpty) {
-      return ReceiveEmpty(message: 'receive_empty_requests'.tr, icon: Icons.person_add_disabled_outlined);
-    }
+    return Obx(() {
+      if (controller.isLoadingRequests.value) {
+        return Center(child: CircularProgressIndicator(color: appTheme.appColor));
+      }
+      if (controller.requests.isEmpty) {
+        return ReceiveEmpty(message: 'receive_empty_requests'.tr, icon: Icons.person_add_disabled_outlined);
+      }
 
-    return RefreshIndicator(
-      color: appTheme.appColor,
-      onRefresh: controller.fetchRequests,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: padding(horizontal: 16, vertical: 8),
-        itemCount: controller.requests.length,
-        separatorBuilder: (_, __) => SizedBox(height: 10.h),
-        itemBuilder: (_, i) => _buildRequestCard(controller.requests[i]),
-      ),
-    );
+      return RefreshIndicator(
+        color: appTheme.appColor,
+        onRefresh: controller.fetchRequests,
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: padding(horizontal: 16, vertical: 8),
+          itemCount: controller.requests.length,
+          separatorBuilder: (_, __) => SizedBox(height: 10.h),
+          itemBuilder: (_, i) => _buildRequestCard(controller.requests[i]),
+        ),
+      );
+    });
   }
 
   Widget _buildRequestCard(ReceiverModel item) {

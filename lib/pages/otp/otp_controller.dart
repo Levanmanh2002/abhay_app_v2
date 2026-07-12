@@ -142,9 +142,9 @@ class OtpController extends GetxController {
   }
 
   @override
-  void onClose() {
+  void dispose() {
     _timer?.cancel();
     otpTextController.dispose();
-    super.onClose();
+    super.dispose();
   }
 }

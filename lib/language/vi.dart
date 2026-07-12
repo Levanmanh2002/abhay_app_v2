@@ -217,4 +217,10 @@ const Map<String, String> vi = {
   'alert_msg_stopped': 'Xe đã dừng lại.',
   'sound_on': 'Bật',
   'sound_off': 'Tắt',
+  'received_alert_detail_title': 'Chi tiết cảnh báo',
+  'alert_title_speed': 'Cảnh báo tốc độ',
+  'alert_title_sudden_stop': 'Cảnh báo dừng đột ngột',
+  'alert_title_stopped': 'Cảnh báo dừng lại',
+  'alert_msg_unknown': 'Cảnh báo an toàn đã được kích hoạt.',
+  'received_alert_detail_empty': 'Không có chi tiết nào cho cảnh báo này.',
 };

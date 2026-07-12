@@ -25,7 +25,7 @@ class ReceiveController extends GetxController {
   }
 
   void onRefresh() async {
-    Future.wait([if (receivedAlerts.isEmpty) fetchAlerts(), if (requests.isEmpty) fetchRequests()]);
+    Future.wait([fetchAlerts(), fetchRequests()]);
   }
 
   Future<void> fetchAll() async {

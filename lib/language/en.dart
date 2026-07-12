@@ -217,4 +217,9 @@ const Map<String, String> en = {
   'alert_msg_unknown': 'Safety alert triggered.',
   'sound_on': 'On',
   'sound_off': 'Off',
+  'received_alert_detail_title': 'Alert Details',
+  'alert_title_speed': 'Alert: Speeding',
+  'alert_title_sudden_stop': 'Alert: Sudden Stop',
+  'alert_title_stopped': 'Alert: Stopped',
+  'received_alert_detail_empty': 'No details available for this alert.',
 };

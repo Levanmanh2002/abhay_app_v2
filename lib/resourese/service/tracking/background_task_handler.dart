@@ -39,6 +39,7 @@ class BackgroundTaskHandler extends TaskHandler {
 
   static const int _suddenStopCooldownSec = 30;
   static const int _stopAlertCooldownSec = 60;
+  static const int _speedAlertCooldownSec = 300; // 5 phút
 
   // ─── TaskHandler lifecycle ────────────────────────────────────────────────
 
@@ -114,7 +115,7 @@ class BackgroundTaskHandler extends TaskHandler {
 
   Future<void> _checkOverSpeedAlert(double speedKmh, Position pos) async {
     if (speedKmh <= _maxSpeed || speedKmh <= 15) return;
-    if (!_canSendAlert(SharedKey.lastSpeedAlertAt, _delaySeconds)) return;
+    if (!_canSendAlert(SharedKey.lastSpeedAlertAt, _speedAlertCooldownSec)) return;
 
     _markAlertSent(SharedKey.lastSpeedAlertAt);
     await _sendAlert(type: 2, speedKmh: speedKmh, position: pos);

@@ -6,9 +6,9 @@ import 'package:abhay_app_v2/utils/logger_helper.dart';
 
 class ReceiveRepository extends IReceiveRepository {
   @override
-  Future<List<NotiAlertModel>> getReceivedAlerts() async {
+  Future<List<NotiAlertModel>> getReceivedAlerts({int page = 1}) async {
     try {
-      final response = await clientGetData(AppConstants.getReceivedAlertsUri);
+      final response = await clientGetData('${AppConstants.getReceivedAlertsUri}?page=$page&limit=1000');
       if (response.isOk) {
         final data = response.body['data'] as List<dynamic>? ?? [];
         return NotiAlertModel.fromJsonList(data);
@@ -54,6 +54,21 @@ class ReceiveRepository extends IReceiveRepository {
     } catch (e, st) {
       loggerHelper.error('rejectRequest: $e', stackTrace: st);
       return false;
+    }
+  }
+
+  @override
+  Future<NotiAlertModel?> getAlertDetail(int id) async {
+    try {
+      final response = await clientGetData('${AppConstants.getAlertDetailUri}/$id');
+      if (response.isOk) {
+        final data = response.body['data'] as Map<String, dynamic>? ?? {};
+        return NotiAlertModel.fromJson(data);
+      }
+      return null;
+    } catch (e, st) {
+      loggerHelper.error('getAlertDetail: $e', stackTrace: st);
+      return null;
     }
   }
 }
