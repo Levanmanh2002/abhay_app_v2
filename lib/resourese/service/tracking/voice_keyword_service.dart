@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import 'system_sound_muter.dart';
+
 typedef OnKeywordDetected = void Function(String keyword);
 typedef OnSoundLevel = void Function(double dba);
 
@@ -74,8 +76,13 @@ class VoiceKeywordService {
 
         if (!_isMonitoring) return;
 
-        // error_busy: quá nhiều restart → delay dài hơn
-        final delaySec = error.errorMsg == 'error_busy' ? 3 : 2;
+        // error_busy: quá nhiều restart → delay dài hơn để tránh vòng lặp lỗi
+        // error_no_match: bình thường (không nói gì) → restart gần như ngay lập tức
+        final delay = switch (error.errorMsg) {
+          'error_busy' => const Duration(seconds: 3),
+          'error_no_match' || 'error_speech_timeout' => const Duration(milliseconds: 250),
+          _ => const Duration(milliseconds: 800),
+        };
 
         // Các lỗi "permanent" trên Android thực ra vẫn restart được
         final canRestart = !error.permanent ||
@@ -84,7 +91,7 @@ class VoiceKeywordService {
             error.errorMsg == 'error_busy' ||
             error.errorMsg == 'error_client';
 
-        if (canRestart) _scheduleRestart(delaySec);
+        if (canRestart) _scheduleRestart(delay);
       },
       onStatus: (status) {
         debugPrint('[VOICE] Status: $status');
@@ -92,10 +99,10 @@ class VoiceKeywordService {
 
         if (!_isMonitoring) return;
 
-        // done/notListening → schedule restart
-        // Dùng _scheduleRestart để cancel timer cũ nếu đã có
+        // done/notListening → schedule restart gần như ngay (trước đây chờ 1s
+        // gây khoảng trống mất mic khá dài, làm rớt từ khoá nói ngay lúc đó)
         if (status == 'done' || status == 'notListening') {
-          _scheduleRestart(1);
+          _scheduleRestart(const Duration(milliseconds: 250));
         }
       },
     );
@@ -123,19 +130,37 @@ class VoiceKeywordService {
     _restartTimer = null;
     _watchdogTimer?.cancel();
     _watchdogTimer = null;
+    await SystemSoundMuter.mute();
     await _speech.stop();
+    unawaited(Future.delayed(const Duration(milliseconds: 600), SystemSoundMuter.unmute));
     debugPrint('[VOICE] Stopped');
   }
 
   bool get isMonitoring => _isMonitoring;
 
+  // ─── Capture transcript (dùng cho bằng chứng SOS — CHỈ TEXT, không audio) ──
+
+  bool _isCapturing = false;
+  final StringBuffer _captureBuffer = StringBuffer();
+
+  /// Thu lại toàn bộ transcript nhận diện được trong [duration] kể từ lúc gọi.
+  /// Dùng chung session STT đang chạy sẵn (không mở thêm mic session nào khác)
+  /// → không có xung đột audio-focus, không cần pause/resume gì cả.
+  Future<String> captureTranscript({Duration duration = const Duration(seconds: 15)}) async {
+    _captureBuffer.clear();
+    _isCapturing = true;
+    await Future.delayed(duration);
+    _isCapturing = false;
+    return _captureBuffer.toString().trim();
+  }
+
   // ─── Restart (single timer, debounced) ───────────────────────────────────
 
   /// Huỷ timer restart cũ, đặt timer mới.
   /// Tránh trường hợp onStatus + onError cùng schedule → error_busy.
-  void _scheduleRestart(int delaySec) {
+  void _scheduleRestart(Duration delay) {
     _restartTimer?.cancel();
-    _restartTimer = Timer(Duration(seconds: delaySec), _startSession);
+    _restartTimer = Timer(delay, _startSession);
   }
 
   // ─── Session ──────────────────────────────────────────────────────────────
@@ -147,13 +172,18 @@ class VoiceKeywordService {
 
     _isRestarting = true;
     try {
-      // Đảm bảo session cũ đã dừng hoàn toàn
+      // Đảm bảo session cũ đã dừng hoàn toàn — mute để chặn beep "dừng nghe"
+      await SystemSoundMuter.mute();
       await _speech.stop();
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 120));
 
-      if (!_isMonitoring) return;
+      if (!_isMonitoring) {
+        await SystemSoundMuter.unmute();
+        return;
+      }
 
       debugPrint('[VOICE] Starting session...');
+      // Vẫn đang mute từ bước stop() ở trên → beep "bắt đầu nghe" cũng bị chặn luôn
       await _speech.listen(
         onResult: _onResult,
         listenFor: _listenFor,
@@ -163,14 +193,22 @@ class VoiceKeywordService {
         listenOptions: SpeechListenOptions(
           partialResults: true,
           cancelOnError: false,
+          // Không dùng dictation mode nữa — dictation cần warm-up lâu hơn
+          // (đôi khi phải chờ cloud endpoint) → dễ mất mất mấy từ đầu ngay
+          // lúc vừa restart, khiến cảm giác "mất thu âm". Mode mặc định
+          // (confirmation) khởi động nhanh hơn, phù hợp việc restart liên tục.
         ),
       );
       _isListening = true;
       debugPrint('[VOICE] Session started OK');
+      // Đợi qua thời điểm phát beep bắt đầu nghe rồi mới unmute lại — không mute
+      // vĩnh viễn vì user vẫn cần nghe nhạc/thông báo khác bình thường.
+      unawaited(Future.delayed(const Duration(milliseconds: 500), SystemSoundMuter.unmute));
     } catch (e) {
       debugPrint('[VOICE] _startSession error: $e');
       _isListening = false;
-      if (_isMonitoring) _scheduleRestart(3);
+      await SystemSoundMuter.unmute();
+      if (_isMonitoring) _scheduleRestart(const Duration(seconds: 3));
     } finally {
       _isRestarting = false;
     }
@@ -183,6 +221,10 @@ class VoiceKeywordService {
     if (transcript.isEmpty) return;
 
     debugPrint('[VOICE] Heard: "${result.recognizedWords}" (final: ${result.finalResult})');
+
+    if (_isCapturing && result.finalResult && result.recognizedWords.isNotEmpty) {
+      _captureBuffer.write('${result.recognizedWords} ');
+    }
 
     final now = DateTime.now();
     if (_lastDetectedAt != null && now.difference(_lastDetectedAt!) < _cooldown) return;
@@ -232,7 +274,7 @@ class VoiceKeywordService {
       }
       if (!_isListening && !_isRestarting) {
         debugPrint('[VOICE] Watchdog → restart');
-        _scheduleRestart(1);
+        _scheduleRestart(const Duration(milliseconds: 300));
       }
     });
   }

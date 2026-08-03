@@ -453,7 +453,7 @@ class _WarningBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
-              child: Text(warning.message.split(' ').first, style: const TextStyle(fontSize: 18)),
+              child: Icon(config.icon, size: 20, color: config.titleColor),
             ),
           ),
           const SizedBox(width: 10),
@@ -462,9 +462,7 @@ class _WarningBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  warning.message.contains(' ')
-                      ? warning.message.substring(warning.message.indexOf(' ') + 1)
-                      : warning.message,
+                  warning.message,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -478,7 +476,7 @@ class _WarningBanner extends StatelessWidget {
                   ),
                 if (warning.distanceM > 0)
                   Text(
-                    '${warning.distanceM.toInt()}m ahead',
+                    'Còn ${warning.distanceM.toInt()}m',
                     style: TextStyle(fontSize: 10, color: config.subtitleColor),
                   ),
               ],
@@ -497,6 +495,7 @@ class _WarningBanner extends StatelessWidget {
     switch (type) {
       case RoadWarningType.speedLimitExceeded:
         return const _BannerConfig(
+          icon: Icons.speed_rounded,
           bgColor: Color(0xFFFFF5F5),
           borderColor: Color(0xFFFEB2B2),
           iconBg: Color(0xFFFED7D7),
@@ -505,6 +504,7 @@ class _WarningBanner extends StatelessWidget {
         );
       case RoadWarningType.incident:
         return const _BannerConfig(
+          icon: Icons.car_crash_rounded,
           bgColor: Color(0xFFFFF5F5),
           borderColor: Color(0xFFFEB2B2),
           iconBg: Color(0xFFFED7D7),
@@ -513,6 +513,7 @@ class _WarningBanner extends StatelessWidget {
         );
       case RoadWarningType.hazard:
         return const _BannerConfig(
+          icon: Icons.warning_amber_rounded,
           bgColor: Color(0xFFEBF8FF),
           borderColor: Color(0xFFBEE3F8),
           iconBg: Color(0xFFBEE3F8),
@@ -521,6 +522,7 @@ class _WarningBanner extends StatelessWidget {
         );
       case RoadWarningType.roadWork:
         return const _BannerConfig(
+          icon: Icons.construction_rounded,
           bgColor: Color(0xFFFFFBEB),
           borderColor: Color(0xFFFBD38D),
           iconBg: Color(0xFFFEF08A),
@@ -529,6 +531,7 @@ class _WarningBanner extends StatelessWidget {
         );
       case RoadWarningType.trafficJam:
         return const _BannerConfig(
+          icon: Icons.traffic_rounded,
           bgColor: Color(0xFFFFF7ED),
           borderColor: Color(0xFFFDBA74),
           iconBg: Color(0xFFFED7AA),
@@ -540,6 +543,7 @@ class _WarningBanner extends StatelessWidget {
 }
 
 class _BannerConfig {
+  final IconData icon;
   final Color bgColor;
   final Color borderColor;
   final Color iconBg;
@@ -547,6 +551,7 @@ class _BannerConfig {
   final Color subtitleColor;
 
   const _BannerConfig({
+    required this.icon,
     required this.bgColor,
     required this.borderColor,
     required this.iconBg,

@@ -11,7 +11,8 @@ class SpeedGaugeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final speed = controller.speed.value;
-      final limit = controller.maxSpeed.value;
+      final limit = controller.effectiveLimit;
+      final fromRoadSign = controller.isLimitFromRoadSign;
       final isOver = controller.isOverSpeed.value;
       final color = isOver ? appTheme.errorColor : appTheme.appColor;
       final progressWidth = (speed / 250 * 20).clamp(4.0, 20.0);
@@ -57,12 +58,12 @@ class SpeedGaugeView extends GetView<HomeController> {
                     spacing: 4.w,
                     children: [
                       Icon(
-                        Icons.warning_amber_rounded,
+                        fromRoadSign ? Icons.signpost_rounded : Icons.warning_amber_rounded,
                         size: 10.w,
                         color: isOver ? appTheme.errorColor : appTheme.appColor,
                       ),
                       Text(
-                        '${'home_limit'.tr} ${limit.round()} km/h',
+                        '${'home_limit'.tr} ${limit.round()} km/h${fromRoadSign ? ' 🚧' : ''}',
                         style: StyleThemeData.size10Weight700(
                           color: isOver ? appTheme.errorColor : appTheme.appColor,
                         ),

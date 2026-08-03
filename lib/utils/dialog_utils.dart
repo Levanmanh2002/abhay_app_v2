@@ -53,4 +53,16 @@ class DialogUtils {
       type: ToastificationType.warning,
     );
   }
+
+  static void showInfoDialog(String content) {
+    if (content.isEmpty) return;
+    toastification.show(
+      context: Get.context!,
+      title: Text(content, maxLines: 3),
+      autoCloseDuration: const Duration(seconds: 4),
+      showProgressBar: false,
+      type: ToastificationType.info,
+      icon: Icon(Icons.signpost_rounded, size: 24.w, color: appTheme.appColor),
+    );
+  }
 }

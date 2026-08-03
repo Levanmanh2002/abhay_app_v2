@@ -11,6 +11,7 @@
     <!-- Foreground service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
 
     <!-- Wake lock (keep CPU alive in background) -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -20,6 +21,7 @@
 
     <!-- Microphone (noise meter) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
 
     <queries>
         <intent>
@@ -80,7 +82,13 @@
         <!-- flutter_foreground_task: background GPS tracking service -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="location"
+            android:foregroundServiceType="location|microphone"
+            android:exported="false" />
+
+        <!-- VoskSosService: nghe từ khoá SOS liên tục, native, độc lập Flutter isolate -->
+        <service
+            android:name="com.app.chaitany.abhay.VoskSosService"
+            android:foregroundServiceType="microphone"
             android:exported="false" />
 
         <!-- Auto-restart on boot -->

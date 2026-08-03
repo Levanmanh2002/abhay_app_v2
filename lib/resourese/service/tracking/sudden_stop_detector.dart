@@ -1,67 +1,69 @@
-/// Phát hiện dừng đột ngột bằng thuật toán peak-speed-window.
+/// Phát hiện tai nạn / dừng đột ngột khẩn cấp.
 ///
-/// Nguyên lý:
-/// - Theo dõi tốc độ đỉnh (_peakSpeed) trong cửa sổ 10 giây.
-/// - Coi là dừng đột ngột khi:
-///   1. Tốc độ giảm về 0 từ peak >= 5 km/h, HOẶC
-///   2. Tốc độ giảm >= 60% so với peak (peak phải >= 10 km/h).
-/// - Cooldown: chỉ báo 1 lần cho mỗi sự kiện, reset khi phục hồi tốc độ.
+/// Đúng theo yêu cầu: chỉ fire khi tốc độ CAO giảm về GẦN 0
+/// trong thời gian RẤT NGẮN — tức là tình huống tai nạn thực sự.
+///
+/// Điều kiện để coi là sudden stop:
+///   1. Peak speed >= [_minPeakKmh] (30 km/h) — đang chạy đủ nhanh
+///   2. Speed giảm về <= [_stopThresholdKmh] (5 km/h) — gần như dừng hẳn
+///   3. Thời gian từ peak → gần 0 <= [_maxTimeSec] (6 giây)
+///
+/// Đèn đỏ bình thường (60→18 km/h trong 15-20s) → KHÔNG fire
+/// Tai nạn (60→0 km/h trong 2-3s)               → fire ✅
 class SuddenStopDetector {
-  static const int _peakWindowSeconds = 10;
-  static const double _minPeakKmh = 10.0;
-  static const double _dropPercentThreshold = 60.0;
+  /// Tốc độ tối thiểu để bắt đầu theo dõi
+  static const double _minPeakKmh = 30.0;
+
+  /// Coi là "gần dừng" khi tốc độ <= ngưỡng này
+  static const double _stopThresholdKmh = 5.0;
+
+  /// Thời gian tối đa từ đỉnh tốc độ xuống gần 0 để coi là đột ngột (giây)
+  static const int _maxTimeSec = 6;
 
   double _peakSpeed = 0.0;
-  DateTime? _peakSpeedTime;
-  bool _hasJustSentAlert = false;
+  DateTime? _peakTime;
+  bool _triggered = false;
 
-  /// Trả về true nếu phát hiện dừng đột ngột với [currentSpeedKmh].
+  /// Trả về true nếu phát hiện dừng đột ngột.
   bool detect(double currentSpeedKmh) {
     final now = DateTime.now();
 
-    // Cập nhật peak speed
+    // Cập nhật peak nếu tốc độ tăng
     if (currentSpeedKmh > _peakSpeed) {
       _peakSpeed = currentSpeedKmh;
-      _peakSpeedTime = now;
-    }
-
-    // Reset peak nếu ngoài cửa sổ thời gian
-    if (_peakSpeedTime != null &&
-        now.difference(_peakSpeedTime!).inSeconds > _peakWindowSeconds) {
-      _peakSpeed = currentSpeedKmh;
-      _peakSpeedTime = now;
-      _hasJustSentAlert = false;
+      _peakTime = now;
+      _triggered = false; // reset khi tốc độ tăng trở lại
       return false;
     }
 
-    if (_peakSpeed >= _minPeakKmh && _peakSpeedTime != null) {
-      final stoppedCompletely = _peakSpeed >= 5 && currentSpeedKmh <= 0;
-      final percentDrop = _peakSpeed > 0
-          ? ((_peakSpeed - currentSpeedKmh) / _peakSpeed) * 100
-          : 0.0;
-      final hasSuddenDrop =
-          _peakSpeed >= _minPeakKmh && percentDrop >= _dropPercentThreshold;
+    // Chưa đủ tốc độ để theo dõi
+    if (_peakSpeed < _minPeakKmh || _peakTime == null) return false;
 
-      if ((stoppedCompletely || hasSuddenDrop) && !_hasJustSentAlert) {
-        _hasJustSentAlert = true;
-        // Reset peak ngay sau khi detect
-        _peakSpeed = currentSpeedKmh;
-        _peakSpeedTime = now;
-        return true;
-      }
+    // Đã trigger rồi thì không trigger lại cho cùng 1 sự kiện
+    if (_triggered) return false;
+
+    // Tốc độ hiện tại vẫn cao → không phải sudden stop
+    if (currentSpeedKmh > _stopThresholdKmh) return false;
+
+    // Tính thời gian từ peak → gần 0
+    final elapsed = now.difference(_peakTime!).inSeconds;
+
+    // Tai nạn thực: tốc độ cao → gần 0 trong vòng _maxTimeSec giây
+    if (elapsed <= _maxTimeSec) {
+      _triggered = true;
+      return true;
     }
 
-    // Reset flag khi tốc độ phục hồi trở lại
-    if (currentSpeedKmh >= _peakSpeed * 0.8 && currentSpeedKmh >= _minPeakKmh) {
-      _hasJustSentAlert = false;
-    }
-
+    // Giảm tốc từ từ (đèn đỏ, kẹt xe) → đã mất > 6 giây → không phải đột ngột
+    // Reset để theo dõi tiếp
+    _peakSpeed = currentSpeedKmh;
+    _peakTime = now;
     return false;
   }
 
   void reset() {
     _peakSpeed = 0.0;
-    _peakSpeedTime = null;
-    _hasJustSentAlert = false;
+    _peakTime = null;
+    _triggered = false;
   }
 }

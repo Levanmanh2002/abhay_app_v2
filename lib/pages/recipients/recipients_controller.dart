@@ -2,7 +2,9 @@ import 'package:abhay_app_v2/models/response/recipients/recipients_model.dart';
 import 'package:abhay_app_v2/resourese/recipients/irecipients_repository.dart';
 import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/easyloading_utils.dart';
+import 'package:abhay_app_v2/utils/local_storage.dart';
 import 'package:abhay_app_v2/utils/logger_helper.dart';
+import 'package:abhay_app_v2/utils/shared_key.dart';
 import 'package:get/get.dart';
 
 class RecipientsController extends GetxController {
@@ -30,6 +32,7 @@ class RecipientsController extends GetxController {
       isLoading.value = true;
       final data = await recipientsRepository.getRecipients();
       recipients.value = data;
+      await LocalStorage.setInt(SharedKey.cachedRecipientCount, data.length);
     } catch (e) {
       loggerHelper.error('Failed to fetch recipients: $e');
     } finally {
@@ -43,6 +46,7 @@ class RecipientsController extends GetxController {
     final ok = await recipientsRepository.deleteRecipient(item.id!);
     if (ok) {
       recipients.removeWhere((r) => r.id == item.id);
+      await LocalStorage.setInt(SharedKey.cachedRecipientCount, recipients.length);
       DialogUtils.showSuccessDialog('recipient_delete_success'.tr);
     } else {
       DialogUtils.showErrorDialog('recipient_delete_failed'.tr);

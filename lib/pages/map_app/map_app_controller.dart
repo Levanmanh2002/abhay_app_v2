@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:abhay_app_v2/models/response/traffic/road_ahead_model.dart';
 import 'package:abhay_app_v2/models/response/traffic/road_sign_model.dart';
 import 'package:abhay_app_v2/models/response/traffic/traffic_incident_model.dart';
 import 'package:abhay_app_v2/pages/profile/profile_controller.dart';
 import 'package:abhay_app_v2/resourese/service/map/road_sign_service.dart';
 import 'package:abhay_app_v2/resourese/service/map/road_warning_service.dart';
-import 'package:abhay_app_v2/resourese/service/map/tom_tom_service.dart';
 import 'package:abhay_app_v2/resourese/service/tracking/tracking_service.dart';
 import 'package:abhay_app_v2/utils/app_constants.dart';
 import 'package:flutter/widgets.dart';
@@ -16,8 +16,19 @@ import 'package:latlong2/latlong.dart';
 
 class MapAppController extends GetxController {
   late final TrackingService _trackingService;
-  final _tomtom = TomTomService();
   final _warningService = RoadWarningService();
+
+  /// LƯU Ý về hai nguồn "biển báo" khác nhau trên màn hình này:
+  ///
+  /// 1. [_signService] — TomTom **Search API / nearbySearch**. Đây là POI
+  ///    (trường học, bệnh viện, đồn cảnh sát, gờ giảm tốc), KHÔNG phải biển báo
+  ///    giao thông. Giữ lại vì nó có toạ độ LatLng nên vẽ được marker trên bản đồ.
+  ///    Nên đổi nhãn UI thành "Điểm cần chú ý" thay vì "Biển báo".
+  ///
+  /// 2. [roadAhead] — TomTom **Snap to Roads API**, trường `trafficSigns`.
+  ///    Đây mới là biển báo giao thông thật (SpeedSign, StopSign,
+  ///    OvertakingRestrictionSign...). Chỉ có khoảng cách dọc theo tuyến đường,
+  ///    không có toạ độ, nên hiển thị dạng danh sách "sắp tới" chứ không vẽ marker.
   final _signService = RoadSignService();
   RoadSignService get signService => _signService;
 
@@ -34,7 +45,7 @@ class MapAppController extends GetxController {
   final RxList<RoadWarning> activeWarnings = <RoadWarning>[].obs;
   final RxBool isOverTomtomLimit = false.obs;
 
-  // Road signs (OSM)
+  // POI xung quanh (nearbySearch) — có toạ độ, vẽ marker được
   final RxList<RoadSignModel> nearbyRoadSigns = <RoadSignModel>[].obs;
 
   // Delegate từ TrackingService
@@ -42,6 +53,21 @@ class MapAppController extends GetxController {
   RxBool get isTracking => _trackingService.isTracking;
   RxBool get isOverSpeed => _trackingService.isOverSpeed;
   RxString get locationText => _trackingService.locationText;
+
+  /// Biển báo giao thông thật + giới hạn tốc độ sắp thay đổi (Snap to Roads).
+  Rx<RoadAheadResult?> get roadAhead => _trackingService.roadAhead;
+
+  /// Danh sách biển báo phía trước trong bán kính hiển thị, đã sort theo khoảng cách.
+  List<TrafficSignAhead> get signsAhead {
+    final road = roadAhead.value;
+    if (road == null) return const [];
+    return road.signsAhead.where((s) => s.distanceM <= _signPanelRadiusM).toList();
+  }
+
+  /// Giới hạn tốc độ sắp thay đổi phía trước (null nếu không có).
+  SpeedLimitChange? get nextSpeedLimit => roadAhead.value?.nextSpeedLimit;
+
+  static const double _signPanelRadiusM = 500.0;
 
   String get speedStr => speed.value.toStringAsFixed(0);
   String get tomtomKey => AppConstants.tomtomApiKey;
@@ -136,9 +162,10 @@ class MapAppController extends GetxController {
       } catch (_) {}
     }
 
-    // TomTom speed limit
+    // TomTom speed limit — dùng chung kết quả TrackingService đã fetch,
+    // không tự gọi API riêng nữa (tránh double quota + throttle-state lệch nhau)
     if (_isAutoDetect) {
-      final limit = await _tomtom.getSpeedLimit(pos.latitude, pos.longitude);
+      final limit = _trackingService.detectedSpeedLimit.value;
       if (limit > 0) speedLimit.value = limit;
     }
 
@@ -150,7 +177,7 @@ class MapAppController extends GetxController {
       tomtomLimit: _isAutoDetect ? speedLimit.value : 0,
     );
 
-    // Road signs (OSM Overpass)
+    // POI xung quanh (nearbySearch)
     await _signService.update(pos.latitude, pos.longitude);
 
     // Sync reactive state
@@ -175,7 +202,6 @@ class MapAppController extends GetxController {
     _isAutoDetect = value;
     if (!value) {
       speedLimit.value = 0;
-      _tomtom.reset();
     }
   }
 

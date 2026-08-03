@@ -57,6 +57,9 @@ class BackgroundTaskHandler extends TaskHandler {
     loggerHelper.logBlue('[BG] Background task started');
 
     _startGps();
+    // Nghe từ khoá SOS giờ do VoskSosService (native) đảm nhiệm — service đó
+    // TỰ CHẠY ĐỘC LẬP với isolate này (là 1 Android Service riêng, không phải
+    // 1 phần của flutter_foreground_task), nên không cần khởi động gì thêm ở đây.
   }
 
   /// Được gọi theo interval đặt trong ForegroundTaskOptions (mỗi 1s Android, 2s iOS).
@@ -146,6 +149,8 @@ class BackgroundTaskHandler extends TaskHandler {
   }
 
   // ─── HTTP trực tiếp (không dùng GetX trong background isolate) ────────────
+  // Lưu ý: gửi SOS theo từ khoá giọng nói giờ do VoskSosService (native) tự
+  // làm hoàn toàn độc lập, không còn nằm trong Dart isolate này nữa.
 
   Future<void> _sendAlert({
     required int type,

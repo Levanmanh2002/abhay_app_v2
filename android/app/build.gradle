@@ -30,6 +30,17 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
+    }
+
+    // jna (dependency của vosk-android) đóng gói .so trùng tên cho nhiều ABI —
+    // pickFirst để tránh lỗi "More than one file was found" lúc build.
+    packagingOptions {
+        jniLibs {
+            pickFirsts += ["**/libjnidispatch.so"]
+        }
     }
 
     buildTypes {
@@ -52,4 +63,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation "androidx.core:core-ktx:1.12.0"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
+
+    // Vosk — offline STT, tự quản lý AudioRecord liên tục bên trong (không có
+    // khái niệm "session timeout" như android.speech.SpeechRecognizer) → đây
+    // là cách thật sự giữ mic mở "vĩnh viễn" không bị ngắt-connect-lại.
+    implementation 'net.java.dev.jna:jna:5.13.0@aar'
+    implementation 'com.alphacephei:vosk-android:0.3.75@aar'
 }

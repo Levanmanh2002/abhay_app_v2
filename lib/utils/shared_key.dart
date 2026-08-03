@@ -15,6 +15,10 @@ class SharedKey {
   static const String cachedIsMeasuringSound = 'cached_is_measuring_sound';
   static const String cachedIsAutoDetectSpeedLimit = 'cached_is_auto_detect_speed_limit';
 
+  // Số lượng recipient đã accept — cache để BackgroundTaskHandler (isolate riêng,
+  // không có GetX/API) biết có nên bật ghi âm bằng chứng SOS hay không.
+  static const String cachedRecipientCount = 'cached_recipient_count';
+
   // Alert cooldown timestamps (shared between foreground & background)
   static const String lastSpeedAlertAt = 'last_speed_alert_at';
   static const String lastSuddenStopAlertAt = 'last_sudden_stop_alert_at';

@@ -164,7 +164,7 @@ class RoadWarningService {
         _activeWarnings.add(RoadWarning(
           id: incident.id,
           type: _typeFromCategory(incident.category),
-          message: '${incident.category.emoji} ${incident.category.label}',
+          message: incident.category.label,
           detail: incident.description.isNotEmpty ? incident.description : _formatDelay(incident.delaySeconds),
           distanceM: dist,
           position: incident.position,

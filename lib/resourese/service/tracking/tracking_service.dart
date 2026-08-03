@@ -2,14 +2,11 @@ import 'dart:async';
 
 import 'package:abhay_app_v2/models/request/alert/alert_request_model.dart';
 import 'package:abhay_app_v2/models/response/profile/user_model.dart';
-import 'package:abhay_app_v2/resourese/home/ihome_repository.dart';
-import 'package:abhay_app_v2/resourese/service/location_service.dart';
+import 'package:abhay_app_v2/models/response/traffic/road_ahead_model.dart';
 import 'package:abhay_app_v2/resourese/service/map/tom_tom_service.dart';
 import 'package:abhay_app_v2/resourese/tracking/itracking_repository.dart';
-import 'package:abhay_app_v2/utils/dialog_utils.dart';
 import 'package:abhay_app_v2/utils/local_storage.dart';
 import 'package:abhay_app_v2/utils/logger_helper.dart';
-import 'package:abhay_app_v2/utils/map_utils.dart';
 import 'package:abhay_app_v2/utils/shared_key.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -18,15 +15,40 @@ import 'package:permission_handler/permission_handler.dart';
 import 'foreground_service_manager.dart';
 import 'gps_filter.dart';
 import 'location_helper.dart';
+import 'native_vosk_sos_service.dart';
 import 'sudden_stop_detector.dart';
-import 'voice_keyword_service.dart';
+
+/// Loại thông báo đường bộ phát ra cho tầng UI.
+enum RoadAnnouncementType { currentSpeedLimit, upcomingSpeedLimit, trafficSign, restriction }
+
+/// Sự kiện một lần, để UI hiển thị toast/banner.
+///
+/// Service KHÔNG tự gọi DialogUtils nữa — bản cũ làm vậy khiến tầng data điều
+/// khiển UI, và spam dialog khi đi qua nhiều đoạn đường liên tiếp. Giờ UI
+/// (HomeController / MapAppController) tự lắng nghe [TrackingService.announcements]
+/// và quyết định hiển thị thế nào, có thể debounce hoặc chuyển sang TTS.
+class RoadAnnouncement {
+  final RoadAnnouncementType type;
+  final String message;
+  final double? distanceM;
+
+  const RoadAnnouncement({required this.type, required this.message, this.distanceM});
+
+  @override
+  String toString() => '[$type] $message';
+}
 
 /// GetxService quản lý toàn bộ trạng thái tracking khi app foreground.
 ///
 /// Mic strategy:
-///   - VoiceKeywordService dùng speech_to_text để VỪATHU âm VỪATHU sound level
-///   - record package KHÔNG dùng nữa (tránh audio focus conflict trên Android)
-///   - sound.obs được update từ STT's onSoundLevelChange callback
+///   - Nghe từ khoá SOS: VoskSosService (native, Vosk) — chạy vĩnh viễn,
+///     không ngắt/connect lại như android.speech.SpeechRecognizer, và gửi
+///     SOS trực tiếp bằng HTTP, độc lập hoàn toàn Flutter isolate.
+///   - VoiceKeywordService (speech_to_text) không còn dùng cho việc nghe
+///     từ khoá nữa (giữ file lại phòng cần dùng việc khác) — vì 1 mic không
+///     dùng đồng thời cho 2 audio consumer khác nhau được.
+///   - Đo âm thanh môi trường (isMeasuringSound) tạm ngưng vì lý do trên —
+///     xem TODO trong setSoundEnabled().
 class TrackingService extends GetxService {
   // ─── Reactive state ───────────────────────────────────────────────────────
   final RxDouble speed = 0.0.obs;
@@ -37,13 +59,23 @@ class TrackingService extends GetxService {
   final RxBool isOverSound = false.obs;
   final RxDouble detectedSpeedLimit = 0.0.obs;
   final Rx<String?> detectedKeyword = Rx<String?>(null);
+
+  /// Dữ liệu đường phía trước từ TomTom Snap to Roads: giới hạn tốc độ hiện tại,
+  /// giới hạn sắp thay đổi, biển báo phía trước, hạn chế theo loại xe.
+  final Rx<RoadAheadResult?> roadAhead = Rx<RoadAheadResult?>(null);
+
+  /// Stream sự kiện một lần cho UI. Broadcast — nhiều màn hình cùng nghe được.
+  final _announcementCtrl = StreamController<RoadAnnouncement>.broadcast();
+  Stream<RoadAnnouncement> get announcements => _announcementCtrl.stream;
+
   Position? _currentPosition;
+  Position? get currentPosition => _currentPosition;
 
   // ─── Internals ────────────────────────────────────────────────────────────
   late final ITrackingRepository _repo;
 
   StreamSubscription<Position>? _gpsSub;
-  VoiceKeywordService? _voiceService;
+  StreamSubscription<Map<String, String>>? _nativeKeywordSub;
 
   static const Duration _keywordAlertDuration = Duration(seconds: 12);
 
@@ -51,6 +83,11 @@ class TrackingService extends GetxService {
   final _suddenStop = SuddenStopDetector();
   final _locationHelper = LocationHelper();
   final _tomtomSvc = TomTomService();
+
+  /// TRUE khi GPS stream thực sự đang chạy. Tách khỏi [isTracking] vì
+  /// [isTracking] còn được khôi phục từ storage lúc khởi động app (khi đó cờ
+  /// bật nhưng GPS chưa chạy).
+  bool get isGpsRunning => _gpsSub != null;
 
   // ─── User settings ────────────────────────────────────────────────────────
   double _maxSpeed = 60.0;
@@ -63,10 +100,27 @@ class TrackingService extends GetxService {
   // TomTom detected speed limit (0 = chưa có)
   double _tomtomSpeedLimit = 0.0;
 
+  // Chống lặp thông báo
+  double _lastAnnouncedCurrentLimit = 0.0;
+  double _lastAnnouncedNextLimit = 0.0;
+  final Map<String, DateTime> _lastAnnouncedSignAt = {};
+
+  bool _isFetchingRoadInfo = false;
+
+  // ─── Ngưỡng gọi TomTom ────────────────────────────────────────────────────
+  /// Không gọi API khi đi quá chậm — vừa tiết kiệm quota, vừa vì heading GPS
+  /// dưới ngưỡng này quá nhiễu để suy ra hướng đi.
+  static const double _tomtomMinSpeedKmh = 15.0;
+
+  /// Chỉ nhắc biển báo khi còn cách dưới ngưỡng này.
+  static const double _signAnnounceRadiusM = 300.0;
+
+  /// Cùng một loại biển báo không nhắc lại trong khoảng thời gian này.
+  static const Duration _signAnnounceCooldown = Duration(seconds: 90);
+
   // ─── Alert cooldown ───────────────────────────────────────────────────────
   static const int _suddenStopCooldownSec = 30;
   static const int _stopAlertCooldownSec = 60;
-  // Sau khi gửi speed alert thành công → đợi 5 phút trước khi gửi tiếp
   static const int _speedAlertCooldownSec = 300;
 
   double _lastSpeed = 0.0;
@@ -84,19 +138,32 @@ class TrackingService extends GetxService {
   @override
   void onClose() {
     _stopInternal();
+    _announcementCtrl.close();
     super.onClose();
   }
 
   // ─── Public API ───────────────────────────────────────────────────────────
 
+  /// FIX: điều kiện thoát sớm trước đây là `if (isTracking.value) return;`.
+  /// Sau khi app bị kill và mở lại, [_restoreState] đã set isTracking = true,
+  /// nên lời gọi start() từ HomeController.onUserLoaded() thoát ngay lập tức →
+  /// GPS stream KHÔNG BAO GIỜ khởi động, UI hiển thị "đang tracking" trong khi
+  /// thực tế không thu thập gì. Giờ kiểm tra trạng thái chạy thật (isGpsRunning).
   Future<void> start(UserModel user) async {
-    if (isTracking.value) return;
+    if (isGpsRunning) {
+      // Vẫn cập nhật settings phòng khi user đổi cấu hình rồi gọi lại start().
+      _loadSettings(user);
+      _cacheSettings();
+      return;
+    }
 
     _loadSettings(user);
 
     final hasPermission = await _requestPermissions();
     if (!hasPermission) {
       loggerHelper.error('[TRACKING] Permission denied');
+      isTracking.value = false;
+      await LocalStorage.setBool(SharedKey.isTracking, false);
       return;
     }
 
@@ -105,14 +172,21 @@ class TrackingService extends GetxService {
     _cacheSettings();
 
     _startGps();
-    _startVoice(); // voice cũng đo sound level qua STT onSoundLevelChange
+
+    await NativeVoskSosService.start();
+    _listenNativeKeywordEvents();
+    if (_isMeasuringSound) {
+      loggerHelper.logBlue('[TRACKING] Sound metering tạm tắt — đang dùng chung mic với Vosk SOS listener');
+      sound.value = 0;
+      isOverSound.value = false;
+    }
 
     await ForegroundServiceManager.start();
     loggerHelper.success('[TRACKING] Started');
   }
 
   Future<void> stop() async {
-    if (!isTracking.value) return;
+    if (!isTracking.value && !isGpsRunning) return;
     _stopInternal();
     isTracking.value = false;
     await LocalStorage.setBool(SharedKey.isTracking, false);
@@ -123,14 +197,31 @@ class TrackingService extends GetxService {
   void applySettings(UserModel user) {
     _loadSettings(user);
     _cacheSettings();
-    // Restart voice để áp dụng _isMeasuringSound mới
-    if (isTracking.value) {
-      _stopVoice();
-      _startVoice();
+    // Tắt auto-detect → xoá dữ liệu TomTom đang hiển thị để UI không giữ giá
+    // trị cũ mãi mãi.
+    if (!_isAutoDetectSpeedLimit) {
+      _tomtomSvc.reset();
+      _tomtomSpeedLimit = 0.0;
+      detectedSpeedLimit.value = 0.0;
+      roadAhead.value = null;
     }
   }
 
   void dismissKeywordAlert() => detectedKeyword.value = null;
+
+  /// Lắng nghe event từ VoskSosService (native) chỉ để cập nhật UI real-time.
+  /// Việc gửi SOS thật sự đã được native tự làm độc lập.
+  void _listenNativeKeywordEvents() {
+    _nativeKeywordSub?.cancel();
+    _nativeKeywordSub = NativeVoskSosService.keywordEvents.listen((event) {
+      final keyword = event['keyword'] ?? '';
+      if (keyword.isEmpty) return;
+      detectedKeyword.value = keyword;
+      Future.delayed(_keywordAlertDuration, () {
+        if (detectedKeyword.value == keyword) detectedKeyword.value = null;
+      });
+    });
+  }
 
   // ─── Private ──────────────────────────────────────────────────────────────
 
@@ -149,12 +240,15 @@ class TrackingService extends GetxService {
     LocalStorage.setInt(SharedKey.cachedDelayTimeAlert, _delaySeconds);
     LocalStorage.setBool(SharedKey.cachedIsStopAlert, _isStopAlertEnabled);
     LocalStorage.setBool(SharedKey.cachedIsMeasuringSound, _isMeasuringSound);
+    LocalStorage.setBool(SharedKey.cachedIsAutoDetectSpeedLimit, _isAutoDetectSpeedLimit);
   }
 
   void _stopInternal() {
     _gpsSub?.cancel();
     _gpsSub = null;
-    _stopVoice();
+    NativeVoskSosService.stop();
+    _nativeKeywordSub?.cancel();
+    _nativeKeywordSub = null;
 
     speed.value = 0.0;
     sound.value = 0.0;
@@ -162,19 +256,28 @@ class TrackingService extends GetxService {
     isOverSpeed.value = false;
     isOverSound.value = false;
     detectedKeyword.value = null;
+    roadAhead.value = null;
 
     _gpsFilter.reset();
     _suddenStop.reset();
     _locationHelper.reset();
+    _tomtomSvc.reset();
+
     _lastSpeed = 0.0;
     _hasSentStopAlert = false;
+    _tomtomSpeedLimit = 0.0;
+    _lastAnnouncedCurrentLimit = 0.0;
+    _lastAnnouncedNextLimit = 0.0;
+    _lastAnnouncedSignAt.clear();
+    _isFetchingRoadInfo = false;
+    detectedSpeedLimit.value = 0.0;
   }
 
   void _restoreState() {
     final wasTracking = LocalStorage.getBool(SharedKey.isTracking);
     if (wasTracking) {
       isTracking.value = true;
-      loggerHelper.logBlue('[TRACKING] Restored tracking flag from storage');
+      loggerHelper.logBlue('[TRACKING] Restored tracking flag from storage — chờ user load để start GPS');
     }
   }
 
@@ -202,21 +305,13 @@ class TrackingService extends GetxService {
     final speedKmh = result.speedKmh;
     speed.value = speedKmh;
 
-    // Fetch TomTom speed limit nếu auto detect bật
-    if (_isAutoDetectSpeedLimit) {
-      final ttLimit = await _tomtomSvc.getSpeedLimit(
-        position.latitude,
-        position.longitude,
-      );
-      if (ttLimit > 0) {
-        _tomtomSpeedLimit = ttLimit;
-        detectedSpeedLimit.value = ttLimit;
-      }
+    // TomTom chạy song song, KHÔNG chặn luồng cảnh báo. Bản cũ await ngay tại
+    // đây với timeout 8s × 2 request, làm trễ toàn bộ logic phát hiện tai nạn.
+    if (_isAutoDetectSpeedLimit && speedKmh >= _tomtomMinSpeedKmh) {
+      unawaited(_updateRoadInfo(position, speedKmh));
     }
 
-    // Effective limit: dùng TomTom nếu có, fallback về maxSpeed user set
-    final effectiveLimit = (_isAutoDetectSpeedLimit && _tomtomSpeedLimit > 0) ? _tomtomSpeedLimit : _maxSpeed;
-
+    final effectiveLimit = _effectiveLimit();
     isOverSpeed.value = speedKmh > effectiveLimit && speedKmh > 5;
 
     final address = await _locationHelper.getAddress(position);
@@ -229,71 +324,103 @@ class TrackingService extends GetxService {
     _lastSpeed = speedKmh;
   }
 
-  // ─── Voice + Sound (dùng chung mic qua STT) ──────────────────────────────
+  double _effectiveLimit() => (_isAutoDetectSpeedLimit && _tomtomSpeedLimit > 0) ? _tomtomSpeedLimit : _maxSpeed;
 
-  void _startVoice() {
-    _voiceService = VoiceKeywordService(
-      onKeywordDetected: _onKeywordDetected,
-      // Sound level từ STT audio stream — không cần record package riêng
-      onSoundLevel: _isMeasuringSound ? _onSoundLevel : null,
-    );
-    _voiceService!.startMonitoring();
-  }
+  // ─── TomTom Snap to Roads ─────────────────────────────────────────────────
 
-  void _stopVoice() {
-    _voiceService?.stopMonitoring();
-    _voiceService = null;
-  }
+  /// 1 request duy nhất trả về: giới hạn tốc độ đoạn đang đi, giới hạn sắp
+  /// thay đổi, biển báo phía trước, hạn chế theo loại xe.
+  Future<void> _updateRoadInfo(Position position, double speedKmh) async {
+    if (_isFetchingRoadInfo) return;
+    _isFetchingRoadInfo = true;
+    try {
+      final road = await _tomtomSvc.update(
+        lat: position.latitude,
+        lng: position.longitude,
+        headingDeg: position.heading,
+        speedKmh: speedKmh,
+        timestamp: position.timestamp,
+      );
+      if (road == null) return;
 
-  void _onSoundLevel(double dba) {
-    sound.value = dba;
-    isOverSound.value = dba > _maxSound;
-  }
+      roadAhead.value = road;
 
-  void _onKeywordDetected(String keyword) async {
-    detectedKeyword.value = keyword;
-    loggerHelper.logBlue('[VOICE] Detected: "$keyword"');
-
-    final IHomeRepository homeRepository = Get.find<IHomeRepository>();
-
-    if ((_currentPosition?.latitude ?? 0) == 0 || (_currentPosition?.longitude ?? 0) == 0) {
-      final position = await LocationService.to.getPosition();
-
-      if (position == null) {
-        DialogUtils.showErrorDialog('Unable to get current location. Please ensure location services are enabled.');
-        return;
+      if (road.currentSpeedLimitKmh > 0) {
+        _tomtomSpeedLimit = road.currentSpeedLimitKmh;
+        detectedSpeedLimit.value = road.currentSpeedLimitKmh;
       }
 
-      final fullAddress = await MapUtils.getAddressFromPosition(position);
-      await homeRepository.onSosSend(
-        latitude: position.latitude,
-        longitude: position.longitude,
-        address: fullAddress.fullAddress.isNotEmpty
-            ? fullAddress.fullAddress
-            : locationText.value.isNotEmpty
-                ? locationText.value
-                : '${position.latitude}, ${position.longitude}',
-      );
-      return;
+      _emitAnnouncements(road);
+    } catch (e, st) {
+      loggerHelper.error('[TRACKING] Road info error: $e', stackTrace: st);
+    } finally {
+      _isFetchingRoadInfo = false;
+    }
+  }
+
+  void _emitAnnouncements(RoadAheadResult road) {
+    // 1. Vào đoạn đường có giới hạn tốc độ mới
+    final current = road.currentSpeedLimitKmh;
+    if (current > 0 && current != _lastAnnouncedCurrentLimit) {
+      _lastAnnouncedCurrentLimit = current;
+      final where = road.roadName?.isNotEmpty == true ? '${road.roadName}: ' : '';
+      _emit(RoadAnnouncement(
+        type: RoadAnnouncementType.currentSpeedLimit,
+        message: '${where}giới hạn tốc độ ${current.toInt()} km/h',
+      ));
     }
 
-    await homeRepository.onSosSend(
-      latitude: _currentPosition?.latitude ?? 0.0,
-      longitude: _currentPosition?.longitude ?? 0.0,
-      address: locationText.value,
-      content: '[VOICE] Detected: "$keyword"',
-    );
+    // 2. Giới hạn tốc độ sắp thay đổi
+    final next = road.nextSpeedLimit;
+    if (next != null && next.valueKmh != _lastAnnouncedNextLimit && next.valueKmh != current) {
+      _lastAnnouncedNextLimit = next.valueKmh;
+      _emit(RoadAnnouncement(
+        type: RoadAnnouncementType.upcomingSpeedLimit,
+        message: 'Sắp tới (${next.distanceM.toInt()}m): giới hạn ${next.valueKmh.toInt()} km/h',
+        distanceM: next.distanceM,
+      ));
+    }
 
-    Future.delayed(_keywordAlertDuration, () {
-      if (detectedKeyword.value == keyword) detectedKeyword.value = null;
-    });
+    // 3. Biển báo phía trước — ưu tiên biển cảnh báo nguy hiểm, có cooldown
+    //    theo từng loại để không nhắc dồn dập cùng một biển.
+    final now = DateTime.now();
+    for (final sign in road.signsAhead) {
+      if (sign.distanceM > _signAnnounceRadiusM) break; // list đã sort tăng dần
+      final last = _lastAnnouncedSignAt[sign.signType];
+      if (last != null && now.difference(last) < _signAnnounceCooldown) continue;
+      _lastAnnouncedSignAt[sign.signType] = now;
+      _emit(RoadAnnouncement(
+        type: RoadAnnouncementType.trafficSign,
+        message: '${sign.label} — còn ${sign.distanceM.toInt()}m',
+        distanceM: sign.distanceM,
+      ));
+    }
+
+    // 4. Hạn chế theo loại xe / phát thải (biển cấm)
+    for (final r in road.restrictionsAhead) {
+      if (r.distanceM > _signAnnounceRadiusM) continue;
+      final key = 'restriction_${r.restrictionType}_${r.engineTypes.join(",")}';
+      final last = _lastAnnouncedSignAt[key];
+      if (last != null && now.difference(last) < _signAnnounceCooldown) continue;
+      _lastAnnouncedSignAt[key] = now;
+      _emit(RoadAnnouncement(
+        type: RoadAnnouncementType.restriction,
+        message: '${r.label} — còn ${r.distanceM.toInt()}m',
+        distanceM: r.distanceM,
+      ));
+    }
+  }
+
+  void _emit(RoadAnnouncement a) {
+    if (_announcementCtrl.isClosed) return;
+    loggerHelper.logBlue('[ROAD] $a');
+    _announcementCtrl.add(a);
   }
 
   // ─── Alert logic ─────────────────────────────────────────────────────────
 
   Future<void> _checkOverSpeedAlert(double speedKmh, Position pos) async {
-    // Dùng TomTom limit nếu auto detect bật và đã có data, fallback về maxSpeed
-    final effectiveLimit = (_isAutoDetectSpeedLimit && _tomtomSpeedLimit > 0) ? _tomtomSpeedLimit : _maxSpeed;
+    final effectiveLimit = _effectiveLimit();
 
     if (speedKmh <= effectiveLimit || speedKmh <= 15) return;
     if (!_canSendAlert(SharedKey.lastSpeedAlertAt, _speedAlertCooldownSec)) return;
@@ -326,7 +453,7 @@ class TrackingService extends GetxService {
     required int type,
     required double speedKmh,
     required Position position,
-    double? speedLimit, // optional — nếu null thì dùng _maxSpeed
+    double? speedLimit,
   }) async {
     final address = await LocationHelper.geocode(position.latitude, position.longitude);
     final locationStr = address.isNotEmpty
@@ -343,11 +470,13 @@ class TrackingService extends GetxService {
       speedLimit: limit.toInt(),
     );
     final ok = await _repo.sendAlert(params);
-    if (!ok)
+    if (!ok) {
       loggerHelper.error('[TRACKING] Alert type=$type failed');
-    else
+    } else {
       loggerHelper.success(
-          '[TRACKING] Alert type=$type sent (limit=${limit.toInt()} km/h, speed=${speedKmh.toStringAsFixed(1)})');
+        '[TRACKING] Alert type=$type sent (limit=${limit.toInt()} km/h, speed=${speedKmh.toStringAsFixed(1)})',
+      );
+    }
   }
 
   // ─── Cooldown helpers ─────────────────────────────────────────────────────
@@ -380,17 +509,16 @@ class TrackingService extends GetxService {
 
   static Future<bool> isLocationServiceEnabled() => Geolocator.isLocationServiceEnabled();
 
-  /// Toggle sound nhanh từ Home — không đợi Settings save
+  /// Toggle sound nhanh từ Home — không đợi Settings save.
+  /// TODO: đo âm thanh môi trường hiện KHÔNG hoạt động — mic do VoskSosService
+  /// (native) độc quyền giữ cho việc nghe từ khoá SOS chạy vĩnh viễn, không thể
+  /// mở thêm audio consumer thứ hai song song. Cần quyết định: bỏ hẳn tính năng,
+  /// hoặc tính amplitude ngay trong VoskSosService rồi bắn qua EventChannel.
+  /// Chừng nào chưa quyết, toggle này chỉ đổi cờ chứ không đo được gì.
   void setSoundEnabled(bool enabled) {
     _isMeasuringSound = enabled;
     LocalStorage.setBool(SharedKey.cachedIsMeasuringSound, enabled);
-    if (isTracking.value) {
-      _stopVoice();
-      _startVoice(); // restart với onSoundLevel mới
-    }
-    if (!enabled) {
-      sound.value = 0.0;
-      isOverSound.value = false;
-    }
+    sound.value = 0.0;
+    isOverSound.value = false;
   }
 }
